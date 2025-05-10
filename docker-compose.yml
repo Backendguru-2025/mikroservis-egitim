@@ -25,10 +25,10 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
     # İsteğe bağlı: ProductService'in MySQL gerçekten hazır olana kadar beklemesini sağlamak için healthcheck
-    # healthcheck:
-    #   test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
-    #   timeout: 20s
-    #   retries: 10
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
+      timeout: 20s
+      retries: 10
 
 volumes:
   mysql_data: # Veri kalıcılığı için adlandırılmış bir volume tanımlar

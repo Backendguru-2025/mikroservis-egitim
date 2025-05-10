@@ -1,0 +1,5 @@
+services:
+  product-service:
+    build: ./product-service
+    ports:
+      - "8081:8080"

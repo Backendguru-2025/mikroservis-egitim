@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: client
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
+#registerWithEureka: true (varsayılan) - bu örneği Eureka'ya kaydet
+# fetchRegistry: true (varsayılan) - Eureka'dan kayıt defteri bilgilerini al
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

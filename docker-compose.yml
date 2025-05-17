@@ -1,9 +1,24 @@
 services:
+
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health"]
+      timeout: 10s
+      retries: 5
+  
+  eureka-client:
+    build: ./client
+    depends_on:
+      - eureka-server
+
   product-service: # 'product-service' adında bir servis tanımlar
     build: ./product-service #'product-service' klasorundeki Dockerfile built eder.
                               # Bu imaj Dockerfile'ınız kullanılarak oluşturulmuş olmalıdır
-    ports:
-      - "8088:8080" # Ana makinedeki 8088 portunu konteynerdeki 8080 portuna eşler
+    #ports:
+    #  - "8088:8080" # Ana makinedeki 8088 portunu konteynerdeki 8080 portuna eşler
                       # (Spring Boot varsayılan portu 8080'dir)
     environment:
       # MySQL için Spring Boot veri kaynağı (datasource) yapılandırması
@@ -13,6 +28,7 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update # veya üretimde 'validate'; 'create-drop' genellikle H2 içindir
       - SPRING_JPA_DATABASE-PLATFORM=org.hibernate.dialect.MySQLDialect # MySQL dialect'ini belirtir
     depends_on:
+      - eureka-server
       - mysql-db # Docker Compose'a, product-service'ten önce mysql-db'yi başlatmasını söyler
 
   mysql-db: # 'mysql-db' adında bir MySQL servisi tanımlar

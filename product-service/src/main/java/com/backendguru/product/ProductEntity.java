@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
+@Entity(name = "products")
 @Data // Lombok: getter, setter, toString(), equals(), hashCode() üretir
 @NoArgsConstructor // Lombok: JPA tarafından proxy oluşturma için gereklidir
 @AllArgsConstructor // Lombok: Nesne oluşturmak için kullanışlıdır
@@ -24,4 +24,5 @@ public class ProductEntity {
     private String name;
     private String description;
     private BigDecimal price; // Para birimi için BigDecimal kullanın
+    private int stockQuantity;
 }

@@ -6,8 +6,11 @@ services:
       - "8761:8761"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health"]
+      interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 30s
+
   
   eureka-client:
     build: ./client
@@ -17,8 +20,8 @@ services:
   product-service: # 'product-service' adında bir servis tanımlar
     build: ./product-service #'product-service' klasorundeki Dockerfile built eder.
                               # Bu imaj Dockerfile'ınız kullanılarak oluşturulmuş olmalıdır
-    #ports:
-    #  - "8088:8080" # Ana makinedeki 8088 portunu konteynerdeki 8080 portuna eşler
+    ports:
+      - "8088:8080" # Ana makinedeki 8088 portunu konteynerdeki 8080 portuna eşler
                       # (Spring Boot varsayılan portu 8080'dir)
     environment:
       # MySQL için Spring Boot veri kaynağı (datasource) yapılandırması
@@ -38,13 +41,13 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=cokgizlisifre
       - MYSQL_DATABASE=productservicedb
-    volumes:
-      - mysql_data:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
+    #volumes:
+    #  - mysql_data:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
     # İsteğe bağlı: ProductService'in MySQL gerçekten hazır olana kadar beklemesini sağlamak için healthcheck
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
       timeout: 20s
       retries: 10
 
-volumes:
-  mysql_data: # Veri kalıcılığı için adlandırılmış bir volume tanımlar
+#volumes:
+#  mysql_data: # Veri kalıcılığı için adlandırılmış bir volume tanımlar

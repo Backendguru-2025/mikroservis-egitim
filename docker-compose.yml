@@ -1,5 +1,21 @@
 services:
 
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "9080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+#      - eureka-server
+      
   eureka-server:
     build: ./eureka-server
     ports:
@@ -11,7 +27,6 @@ services:
       retries: 5
       start_period: 30s
 
-  
   eureka-client:
     build: ./client
     depends_on:
@@ -20,8 +35,8 @@ services:
   product-service: # 'product-service' adında bir servis tanımlar
     build: ./product-service #'product-service' klasorundeki Dockerfile built eder.
                               # Bu imaj Dockerfile'ınız kullanılarak oluşturulmuş olmalıdır
-    ports:
-      - "8088:8080" # Ana makinedeki 8088 portunu konteynerdeki 8080 portuna eşler
+#    ports:
+#      - "8088:8080" # Ana makinedeki 8088 portunu konteynerdeki 8080 portuna eşler
                       # (Spring Boot varsayılan portu 8080'dir)
     environment:
       # MySQL için Spring Boot veri kaynağı (datasource) yapılandırması
@@ -34,6 +49,22 @@ services:
       - eureka-server
       - mysql-db # Docker Compose'a, product-service'ten önce mysql-db'yi başlatmasını söyler
 
+  user-service: 
+    build: ./user-service            
+#    ports:
+#      - "8089:8080"
+    depends_on:
+      - eureka-server
+      - mysql-db-2
+
+  order-service: 
+    build: ./order-service            
+#    ports:
+#      - "8090:8080"
+    depends_on:
+      - eureka-server
+      - mysql-db-3      
+
   mysql-db: # 'mysql-db' adında bir MySQL servisi tanımlar
     image: mysql:8.0 # Resmi bir MySQL imajını kullanır
     ports:
@@ -41,13 +72,45 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=cokgizlisifre
       - MYSQL_DATABASE=productservicedb
-    #volumes:
-    #  - mysql_data:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
-    # İsteğe bağlı: ProductService'in MySQL gerçekten hazır olana kadar beklemesini sağlamak için healthcheck
+    volumes:
+      - mysql_data:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
+    
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
       timeout: 20s
       retries: 10
 
-#volumes:
-#  mysql_data: # Veri kalıcılığı için adlandırılmış bir volume tanımlar
+  mysql-db-2: 
+    image: mysql:8.0 # Resmi bir MySQL imajını kullanır
+    ports:
+      - "33062:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=cokgizlisifre
+      - MYSQL_DATABASE=userservicedb
+    volumes:
+      - mysql_data_2:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
+    
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
+      timeout: 20s
+      retries: 10      
+
+  mysql-db-3: 
+      image: mysql:8.0 # Resmi bir MySQL imajını kullanır
+      ports:
+        - "33063:3306"
+      environment:
+        - MYSQL_ROOT_PASSWORD=cokgizlisifre
+        - MYSQL_DATABASE=orderservicedb
+      volumes:
+        - mysql_data_3:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
+      
+      healthcheck:
+        test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
+        timeout: 20s
+        retries: 10        
+
+volumes:
+  mysql_data: # Veri kalıcılığı için adlandırılmış bir volume tanımlar
+  mysql_data_2:
+  mysql_data_3:

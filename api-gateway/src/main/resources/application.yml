@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: api-gateway   
+  cloud:
+    gateway:
+      routes:
+      - id: rewritepath_route
+        uri: http://product-service:8080
+        predicates:
+        - Path=/mobile/products/**
+#        - Path=/web/products/**
+        filters:
+        - RewritePath=/mobile/?(?<segment>.*), /v1/$\{segment}   
+        
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/ 

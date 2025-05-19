@@ -2,22 +2,17 @@ package com.backendguru.microservice.order;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-
-@Testcontainers
 @SpringBootTest(properties = {
     "spring.cloud.discovery.enabled=false",
-    "spring.cloud.service-registry.auto-registration.enabled=false"
+    "spring.cloud.service-registry.auto-registration.enabled=false",
+	"spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+	"spring.datasource.driverClassName=org.h2.Driver",
+	"spring.datasource.username=sa",
+	"spring.datasource.password=",
+	"spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
 })
 class OrderServiceApplicationTests {
-
-	@Container
-	@ServiceConnection
-	static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
 
 	@Test
 	void contextLoads() {

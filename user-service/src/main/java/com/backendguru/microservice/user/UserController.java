@@ -19,15 +19,15 @@ public class UserController{
 
     private final UserService userService;
 
-    @GetMapping(value = "/{productId}", produces= MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserResponse> getProduct(@PathVariable Long userId) throws Exception{
+    @GetMapping(value = "/{userId}", produces= MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponse> getUser(@PathVariable Long userId) throws Exception{
         Optional<UserResponse> user = userService.getUserById(userId);
         return user.map(ResponseEntity::ok) // Eğer varsa, 200 OK içine sar
                       .orElse(ResponseEntity.notFound().build()); // Eğer yoksa, 404 döndür
     }
 
     @GetMapping
-    public List<UserResponse> getAllProducts() {
+    public List<UserResponse> getAllUsers() {
         return userService.getAllUsers();
     }
 

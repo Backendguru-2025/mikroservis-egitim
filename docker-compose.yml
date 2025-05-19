@@ -14,7 +14,6 @@ services:
       - user-service
       - product-service
       - order-service
-#      - eureka-server
       
   eureka-server:
     build: ./eureka-server
@@ -27,16 +26,16 @@ services:
       retries: 5
       start_period: 30s
 
-  eureka-client:
-    build: ./client
-    depends_on:
-      - eureka-server
+#  eureka-client:
+#    build: ./client
+#    depends_on:
+#      - eureka-server
 
   product-service: # 'product-service' adında bir servis tanımlar
     build: ./product-service #'product-service' klasorundeki Dockerfile built eder.
                               # Bu imaj Dockerfile'ınız kullanılarak oluşturulmuş olmalıdır
-#    ports:
-#      - "8088:8080" # Ana makinedeki 8088 portunu konteynerdeki 8080 portuna eşler
+    ports:
+      - "8088:8080" # Ana makinedeki 8088 portunu konteynerdeki 8080 portuna eşler
                       # (Spring Boot varsayılan portu 8080'dir)
     environment:
       # MySQL için Spring Boot veri kaynağı (datasource) yapılandırması
@@ -51,19 +50,19 @@ services:
 
   user-service: 
     build: ./user-service            
-#    ports:
-#      - "8089:8080"
+    ports:
+      - "8089:8080"
     depends_on:
       - eureka-server
-      - mysql-db-2
+      - mysql-db
 
   order-service: 
     build: ./order-service            
-#    ports:
-#      - "8090:8080"
+    ports:
+      - "8090:8080"
     depends_on:
       - eureka-server
-      - mysql-db-3      
+      - mysql-db     
 
   mysql-db: # 'mysql-db' adında bir MySQL servisi tanımlar
     image: mysql:8.0 # Resmi bir MySQL imajını kullanır
@@ -71,46 +70,15 @@ services:
       - "33061:3306" # Ana makine portu 33061'i konteyner portu 3306'ya eşler (DB'ye dışarıdan erişim için isteğe bağlı)
     environment:
       - MYSQL_ROOT_PASSWORD=cokgizlisifre
-      - MYSQL_DATABASE=productservicedb
+      - MYSQL_DATABASE=defaultdb
     volumes:
       - mysql_data:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
-    
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
-      timeout: 20s
-      retries: 10
-
-  mysql-db-2: 
-    image: mysql:8.0 # Resmi bir MySQL imajını kullanır
-    ports:
-      - "33062:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=cokgizlisifre
-      - MYSQL_DATABASE=userservicedb
-    volumes:
-      - mysql_data_2:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
+      - ./init:/docker-entrypoint-initdb.d
     
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
       timeout: 20s
       retries: 10      
 
-  mysql-db-3: 
-      image: mysql:8.0 # Resmi bir MySQL imajını kullanır
-      ports:
-        - "33063:3306"
-      environment:
-        - MYSQL_ROOT_PASSWORD=cokgizlisifre
-        - MYSQL_DATABASE=orderservicedb
-      volumes:
-        - mysql_data_3:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
-      
-      healthcheck:
-        test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
-        timeout: 20s
-        retries: 10        
-
 volumes:
   mysql_data: # Veri kalıcılığı için adlandırılmış bir volume tanımlar
-  mysql_data_2:
-  mysql_data_3:

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkileşimli E-ticaret Alan Odaklı Analiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Görselleştirme ve İçerik Seçenekleri:
+        - DDD Temelleri (Bölüm 1) -> Amaç: Bilgilendirme -> Görsel/Yöntem: Metin, akordiyonlar (HTML/CSS/JS) -> Etkileşim: Genişlet/Daralt -> Gerekçe: Metin yoğunluğunu yönetme.
+        - Bağlamları Belirleme (Bölüm 2) -> Amaç: Bilgilendirme -> Görsel/Yöntem: Metin, listeler (HTML/CSS) -> Etkileşim: Statik -> Gerekçe: Açık sunum.
+        - SB Tablosu (Bölüm 3) -> Amaç: Karşılaştırma/Bilgilendirme -> Görsel/Yöntem: Etkileşimli HTML Tablosu (JS) -> Etkileşim: Satıra tıkla -> Gerekçe: Kolay gezinme.
+        - SB Detayları (Bölüm 3) -> Amaç: Bilgilendirme/Organize Etme -> Görsel/Yöntem: Dinamik metin bölümleri (JS) -> Etkileşim: Bağlam seç -> Gerekçe: Odaklanmış görünüm.
+        - SB Etkileşim Grafiği (Bölüm 3'ten türetilmiş) -> Amaç: Karşılaştırma -> Görsel/Yöntem: Çubuk Grafik (Chart.js) -> Etkileşim: Araç ipuçları -> Gerekçe: Görsel özet.
+        - Entegrasyon Desenleri (Bölüm 4) -> Amaç: Bilgilendirme/Organize Etme -> Görsel/Yöntem: Kartlar (HTML/CSS) -> Etkileşim: Statik -> Gerekçe: Açık ayrım.
+        - Bağlam Haritası (Bölüm 4) -> Amaç: İlişkiler -> Görsel/Yöntem: HTML/CSS Diyagramı (fareyle üzerine gelme için JS) -> Etkileşim: Fareyle üzerine gel -> Gerekçe: Görsel genel bakış (SVG yok).
+        - Geliştirici Rehberliği (Bölüm 5) -> Amaç: Bilgilendirme -> Görsel/Yöntem: Kartlar/Listeler (HTML/CSS) -> Etkileşim: Statik -> Gerekçe: Uygulanabilir tavsiye.
+        - ONAY: SVG grafikleri kullanılmadı. Mermaid JS kullanılmadı. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .nav-link { cursor: pointer; padding: 0.5rem 1rem; border-radius: 0.375rem; transition: background-color 0.3s, color 0.3s; }
+        .nav-link.active { background-color: #0D9488; color: white; } /* teal-600 */
+        .nav-link:not(.active):hover { background-color: #CCFBF1; } /* teal-100 */
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .chart-container { position: relative; width: 100%; max-width: 700px; margin-left: auto; margin-right: auto; height: 350px; max-height: 450px; } /* Grafik görünürlüğü için artırılmış maksimum yükseklik */
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .context-box { border: 2px solid #5EEAD4; /* teal-300 */ padding: 0.75rem; margin: 0.5rem; border-radius: 0.375rem; text-align: center; cursor: default; transition: transform 0.2s, box-shadow 0.2s; font-size: 0.875rem; }
+        .context-box.highlight-strong { border-color: #047857; /* teal-700 */ background-color: #CCFBF1; /* teal-100 */ transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .context-box.highlight-medium { border-color: #0D9488; /* teal-600 */ background-color: #F0FDFA; /* teal-50 */ }
+        .keyword-tag { background-color: #99F6E4; color: #115E59; padding: 0.25rem 0.5rem; border-radius: 0.25rem; margin: 0.25rem; display: inline-block; font-size: 0.875rem; }
+        .detail-card { background-color: #FDFBF6; border-left: 4px solid #0D9488; padding: 1rem; margin-bottom: 1rem; border-radius: 0.25rem;} /* kartlar için amber-50 benzeri */
+        .detail-card h4 { color: #047857; } /* teal-700 */
+    </style>
+</head>
+<body class="bg-amber-50 text-neutral-800">
+<div class="container mx-auto p-4 md:p-8">
+    <header class="mb-8 text-center">
+        <h1 class="text-4xl font-bold text-neutral-700">Etkileşimli E-ticaret Alan Odaklı Analiz</h1>
+        <p class="text-lg text-neutral-600 mt-2">Geliştiriciler İçin Açıklayıcı Bir Rehber</p>
+    </header>
+
+    <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4 mb-8 bg-white p-3 rounded-lg shadow-md sticky top-0 z-50">
+        <a class="nav-link active" data-tab="intro">DDD Temelleri</a>
+        <a class="nav-link" data-tab="identifying">Bağlamları Belirleme</a>
+        <a class="nav-link" data-tab="explorer">Bağlam Gezgini</a>
+        <a class="nav-link" data-tab="interactions">Bağlam Etkileşimleri</a>
+        <a class="nav-link" data-tab="guidance">Geliştirici Rehberliği</a>
+    </nav>
+
+    <main>
+        <section id="intro" class="tab-content active p-6 bg-white rounded-lg shadow">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">1. Alan Odaklı Tasarımın (DDD) Temelleri</h2>
+            <p class="mb-6 text-neutral-600">Bu bölüm, Alan Odaklı Tasarım'ın (DDD) temel kavramlarını ve karmaşık e-ticaret sistemleri geliştirmedeki önemini tanıtmaktadır. DDD'nin neden önemli olduğunu, mikroservisler için temel mimari prensipleri ve DDD'nin temelini oluşturan stratejik sütunları kapsayarak geliştiricilerin yazılımı iş alanlarıyla yakından hizalamasına ve değişime uyum sağlamasına yardımcı olur.</p>
+
+            <div class="space-y-4">
+                <div class="border border-gray-200 rounded-md">
+                    <button class="accordion-toggle w-full text-left text-xl font-medium text-teal-700 p-4 bg-teal-50 hover:bg-teal-100 transition flex justify-between items-center rounded-t-md">
+                        <span>1.1. E-ticarette DDD Neden Önemlidir: Karmaşıklıkla Başa Çıkma</span>
+                        <span class="arrow-icon transform transition-transform duration-300 text-teal-600 text-2xl">&#9662;</span>
+                    </button>
+                    <div class="accordion-content p-4 border-t border-gray-200 text-neutral-600">
+                        <p>E-ticaret sistemleri doğası gereği karmaşıktır; ürün katalogları, envanter yönetimi, sipariş işleme ve müşteri etkileşimi gibi unsurları içerir. Geleneksel mimariler genellikle zorlanır ve bu da karışık kod tabanlarına yol açar. DDD, yazılım tasarımını iş alanıyla hizalayarak bu karmaşıklığı yönetir ve iş kavramlarını yansıtan modeller oluşturur. Bu uyarlanabilirlik, dinamik e-ticaret ortamı için hayati önem taşır, çevikliği ve uzun vadeli sürdürülebilirliği teşvik eder. Yazılımın gelişen iş ihtiyaçlarıyla uyumsuzluğu yüksek maliyetlere yol açabilir; DDD bu riski azaltmak için stratejik bir yanıttır.</p>
+                    </div>
+                </div>
+
+                <div class="border border-gray-200 rounded-md">
+                    <button class="accordion-toggle w-full text-left text-xl font-medium text-teal-700 p-4 bg-teal-50 hover:bg-teal-100 transition flex justify-between items-center rounded-t-md">
+                        <span>1.2. Mikroservis Tasarımı İçin Temel Mimari Prensipler</span>
+                        <span class="arrow-icon transform transition-transform duration-300 text-teal-600 text-2xl">&#9662;</span>
+                    </button>
+                    <div class="accordion-content p-4 border-t border-gray-200 text-neutral-600 space-y-3">
+                        <h4 class="text-lg font-semibold text-neutral-700">1.2.1. Bilgi Gizleme: Karmaşıklığı Kapsülleme</h4>
+                        <p>Bir mikroservisin iç uygulama detaylarını gizleyerek yalnızca kararlı bir arayüz sunun. Tüketicilerin, servisin işlevlerini *nasıl* yerine getirdiğini değil, yalnızca *ne* sunduğunu bilmesi gerekir. Bu, tüketicileri etkilemeden iç değişikliklere olanak tanır ve bağımsız dağıtım için kritik öneme sahiptir. Örnek: Bir `Ödemeİşleme` servisi, ağ geçidi etkileşim detaylarını gizleyerek standart bir `ÖdemeYap` API'si sunar.</p>
+                        <h4 class="text-lg font-semibold text-neutral-700 mt-3">1.2.2. Bağlılık (Cohesion): Odaklanmış, Anlaşılır Servisler Oluşturma</h4>
+                        <p>"Birlikte değişen kod, birlikte kalır." Yüksek bağlılık için ilgili işlevleri bir mikroservis içinde gruplayın. Bu, servisleri anlaşılır ve sürdürülebilir hale getirir. Örnek: Bir `SiparişYönetimi` servisi, bir siparişin yaşam döngüsünün tüm yönlerini ele alır.</p>
+                        <h4 class="text-lg font-semibold text-neutral-700 mt-3">1.2.3. Bağımlılık (Coupling): Servisler Arası Bağımlılıkları Yönetme</h4>
+                        <p>Bir servisteki değişikliklerin diğerlerinde değişiklik gerektirmediği gevşek bağımlılığı hedefleyin. Türleri şunlardır:</p>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li><strong>Alan Bağımlılığı:</strong> İş işlevselliği için gerekli etkileşim (örneğin, `SiparişServisi`nin `EnvanterServisi`ni çağırması). Genellikle kabul edilebilir.</li>
+                            <li><strong>Geçiş Bağımlılığı:</strong> Veriyi kullanmadan bir sonraki servis için iletmek. Sorunlu.</li>
+                            <li><strong>Ortak Bağımlılık:</strong> Ortak bir kaynağı paylaşmak (örneğin, veritabanı). Özellikle okuma/yazma için riskli.</li>
+                            <li><strong>İçerik Bağımlılığı:</strong> Başka bir servisin iç verilerine doğrudan erişmek. Kaçınılmalıdır.</li>
+                        </ul>
+                        <p class="mt-2">Pratik geliştirme, ödünleşimler içerir. Örneğin, performans için birçok bireysel çağrı yerine toplu API çağrıları veya önbellekleme kullanılabilir, prensipler operasyonel gereksinimlerle dengelenir.</p>
+                    </div>
+                </div>
+
+                <div class="border border-gray-200 rounded-md">
+                    <button class="accordion-toggle w-full text-left text-xl font-medium text-teal-700 p-4 bg-teal-50 hover:bg-teal-100 transition flex justify-between items-center rounded-t-md">
+                        <span>1.3. DDD'nin Stratejik Sütunları</span>
+                        <span class="arrow-icon transform transition-transform duration-300 text-teal-600 text-2xl">&#9662;</span>
+                    </button>
+                    <div class="accordion-content p-4 border-t border-gray-200 text-neutral-600 space-y-3">
+                        <h4 class="text-lg font-semibold text-neutral-700">1.3.1. Her Yerde Geçerli Dil (Ubiquitous Language): Ortak Kelime Dağarcığı</h4>
+                        <p>Tüm ekip üyeleri (geliştiriciler, alan uzmanları, iş analistleri) tarafından paylaşılan, titizlikle tanımlanmış ortak bir kelime dağarcığıdır. Tartışmalarda, belgelerde ve kodda kullanılır. Belirsizliği en aza indirir. Örnek: "Sevkiyat" terimi, `SevkiyatVeTeslimat` bağlamında kesin olarak tanımlanır.</p>
+                        <h4 class="text-lg font-semibold text-neutral-700 mt-3">1.3.2. Kümeler (Aggregates): Tutarlılığın Koruyucuları</h4>
+                        <p>Veri değişiklikleri ve tutarlılık için tek bir birim olarak ele alınan bir alan nesneleri kümesidir. Tek giriş noktası olarak bir Küme Kökü'ne (Aggregate Root) sahiptir. İşlem sınırlarını tanımlar ve değişmezleri (invariant) zorlar. Örnek: `Sipariş` Kümesi (Kök), `SiparişKalemi` Varlıkları ve `TeslimatAdresi` Değer Nesnesi ile "sipariş toplamı kalemlerinin toplamı olmalıdır" gibi kuralları zorlar.</p>
+                        <h4 class="text-lg font-semibold text-neutral-700 mt-3">1.3.3. Sınırlı Bağlamlar (Bounded Contexts): Model Sınırlarını Tanımlama</h4>
+                        <p>Bir alan modelinin ve Her Yerde Geçerli Dilinin tutarlı olduğu açık bir sınırdır. Büyük bir alanı yönetilebilir alt alanlara böler. Farklı bağlamlar, aynı kavramsal varlık için farklı modellere sahip olabilir. Örnek: `ÜrünKataloğu`ndaki "Ürün" (pazarlama odaklı) ile `EnvanterYönetimi`ndeki "StokKalemi" (lojistik odaklı) farklıdır. Bu, büyük bir alanda anlamsal tutarlılığı yönetir ve özel modellerin bir arada bulunmasına olanak tanır.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="identifying" class="tab-content p-6 bg-white rounded-lg shadow">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">2. E-ticaret Alanını Ayrıştırma: Sınırlı Bağlamları Belirleme</h2>
+            <p class="mb-6 text-neutral-600">Bu bölüm, bir e-ticaret alanındaki Sınırlı Bağlamları keşfetme stratejilerini özetlemektedir. Bağlamları iş yetenekleriyle hizalamayı ve farklı paydaşlar tarafından kullanılan her yerde geçerli dili analiz etmeyi vurgular. Bu stratejileri anlamak, karmaşık bir sistemi yönetilebilir, bağlı mikroservislere etkili bir şekilde bölmek için anahtardır.</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-4 bg-amber-100 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-semibold text-teal-700 mb-3">2.1. Keşif Stratejileri</h3>
+                    <ul class="list-disc list-inside text-neutral-600 space-y-2">
+                        <li><strong>İş Yetenekleriyle Hizalama:</strong> Bağlamları işin *ne yaptığına* göre haritalayın (örneğin, "ürün bilgilerini yönetme" için `ÜrünKataloğu`).</li>
+                        <li><strong>Her Yerde Geçerli Dili Analiz Etme:</strong> Benzer kavramlar için farklı terminolojiler genellikle bir sınırı gösterir.</li>
+                        <li><strong>Organizasyon Yapısını Dikkate Alma (Conway Yasası):</strong> Ekip yapıları ipuçları sağlayabilir.</li>
+                        <li><strong>Olay Fırtınası (Event Storming):</strong> Alan olaylarını ve kümelerini belirlemek için işbirlikçi bir atölye çalışması, doğal bağlamları ortaya çıkarır.</li>
+                    </ul>
+                    <p class="mt-3 text-sm text-neutral-500">Bağlamları belirlemek yinelemeli bir süreçtir; ilk tanımlar zamanla geliştirilen hipotezlerdir. Erken ayrıştırmadan kaçının.</p>
+                </div>
+
+                <div class="p-4 bg-amber-100 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-semibold text-teal-700 mb-3">2.2. İş Yeteneklerinin Rolü</h3>
+                    <p class="text-neutral-600">Bir iş yeteneği, bir organizasyonun belirli bir sonucu elde etme yeteneğidir (örneğin, "Sipariş Karşılama"). Sınırlı Bağlamları yeteneklerle eşleştirmek, yetenekler belirli süreçlerden veya teknolojilerden daha kalıcı olduğu için daha kararlı mimari bileşenlere yol açar.</p>
+                    <p class="mt-2 text-neutral-600">Bağlamları değişken iş *süreçleri* etrafında modellemekten kaçının. "Sipariş Verme Yeteneği" ile tanımlanan bir bağlam, "Standart Çevrimiçi Ödeme Süreci" ile tanımlanan bir bağlamdan süreç değişikliklerine karşı daha sağlamdır.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="explorer" class="tab-content p-6 bg-white rounded-lg shadow">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">3. E-ticaret Sınırlı Bağlam Gezgini</h2>
+            <p class="mb-6 text-neutral-600">Bu bölüm, bir e-ticaret platformundaki yaygın Sınırlı Bağlamları keşfetmek için etkileşimli bir yol sunar. Bir özet tablo görüntüleyebilir, etkileşimlerinin bir grafiğini görebilir ve amacını, sorumluluklarını, temel veri öğelerini, dilini, entegrasyonlarını ve tipik zorluklarını daha derinlemesine incelemek için açılır menüden bir bağlam seçebilirsiniz.</p>
+
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-teal-700 mb-3">Sınırlı Bağlam Etkileşim Grafiği</h3>
+                <div class="chart-container bg-amber-100 p-4 rounded-md shadow-inner">
+                    <canvas id="interactionsChart"></canvas>
+                </div>
+                <p class="text-sm text-neutral-500 mt-2 text-center">Grafik, özet tablodan her Sınırlı Bağlam için listelenen birincil etkileşim sayısını gösterir.</p>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-teal-700 mb-3">Bir Bakışta E-ticaret Sınırlı Bağlamları</h3>
+                <div class="overflow-x-auto shadow-md rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200 border border-gray-200">
+                        <thead class="bg-teal-600 text-white">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Bağlam Adı</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Temel Sorumluluk</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Anahtar Kümeler</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Birincil Etkileşimler</th>
+                        </tr>
+                        </thead>
+                        <tbody id="contextsTableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-neutral-500 mt-2">Aşağıda daha fazla ayrıntı görmek için bir satıra tıklayın.</p>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-semibold text-teal-700 mb-1">Bir Sınırlı Bağlama Derinlemesine Bakış</h3>
+                <label for="contextSelector" class="block text-sm font-medium text-neutral-700 mb-1">Bir Bağlam Seçin:</label>
+                <select id="contextSelector" class="w-full md:w-1/2 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 mb-6">
+                </select>
+                <div id="contextDetailView" class="mt-4 space-y-3">
+                    <p class="text-neutral-500">Ayrıntılarını görmek için bir bağlam seçin.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="interactions" class="tab-content p-6 bg-white rounded-lg shadow">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">4. Etkileşimler ve İlişkiler: Bağlamları Haritalama</h2>
+            <p class="mb-6 text-neutral-600">Sınırlı Bağlamların nasıl ilişkili olduğunu ve entegre olduğunu anlamak çok önemlidir. Bu bölüm, Bağlam Haritasını bir görselleştirme aracı olarak tanıtır ve yaygın entegrasyon desenlerini detaylandırır. Alan Olayları da gevşek bağlı, eşzamansız iletişimi sağlamak için önemli bir mekanizma olarak vurgulanır.</p>
+
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-teal-700 mb-3">4.1. Manzarayı Görselleştirme: Bağlam Haritası</h3>
+                <p class="text-neutral-600 mb-4">Bir Bağlam Haritası, Sınırlı Bağlamları ve aralarındaki ilişkileri gösteren bir diyagramdır ve mimari bir plan görevi görür. Sistem yapısını, entegrasyon noktalarını, bilgi akışını ve ekip sorumluluklarını netleştirir. Aşağıda basitleştirilmiş etkileşimli bir temsil bulunmaktadır. Bir bağlamın üzerine gelerek birincil etkileşim ortaklarının vurgulandığını görün.</p>
+                <div id="interactiveContextMap" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 p-4 bg-amber-100 rounded-md shadow-inner">
+                </div>
+                <p class="text-sm text-neutral-500 mt-2 text-center">Bu kavramsal bir haritadır. Güçlü vurgu, üzerine gelinen bağlamı; orta vurgu ise doğrudan etkileşimde bulunduğu bağlamları gösterir.</p>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-semibold text-teal-700 mb-3">4.2. Yaygın Entegrasyon Desenleri</h3>
+                <div id="integrationPatterns" class="space-y-4">
+                </div>
+                <p class="mt-6 text-neutral-600"><strong>Alan Olayları</strong>, gevşek bağlı, eşzamansız iletişimi sağlamada merkezi bir rol oynar. Bir bağlamda önemli bir iş olayı meydana geldiğinde (örneğin, `SiparişVerildiOlayı`), ilgilenen diğer bağlamlar abone olabilir ve tepki verebilir, bu da sıkı, eşzamanlı bağımlılıkları önler ve dayanıklılığı artırır. Kafka gibi olay akış platformları sıklıkla kullanılır.</p>
+            </div>
+        </section>
+
+        <section id="guidance" class="tab-content p-6 bg-white rounded-lg shadow">
+            <h2 class="text-3xl font-semibold text-neutral-700 mb-6">5. Geliştiriciler İçin Pratik Rehberlik</h2>
+            <p class="mb-6 text-neutral-600">Bu bölüm, bir e-ticaret ortamında DDD uygulayan geliştiriciler için pratik tavsiyeler sunar. Yinelemeli modellemeyi, işbirliğinin önemini, yalnızca verilere değil davranışa odaklanmayı ve dayanıklı ve geliştirilebilir sistemler oluşturmak için temel çıkarımları kapsar. Bu noktaları anlamak, DDD teorisini etkili yazılıma dönüştürmeye yardımcı olabilir.</p>
+
+            <div id="guidanceItemsContainer" class="space-y-6">
+            </div>
+            <p class="mt-6 text-neutral-600">E-ticaret mikroservislerinde DDD'nin gerçek gücü, devam eden platform evrimine rehberlik etmesinde yatar. İş değiştikçe, yazılım modeli uyumlu bir şekilde adapte olabilir. Açık Sınırlı Bağlamlar, sistemi istikrarsızlaştırmadan servisleri tanıtmayı, yeniden düzenlemeyi veya kullanımdan kaldırmayı kolaylaştıran dikişler görevi görür. Her Yerde Geçerli Dil, değişikliklerin iyi anlaşılmasını sağlayarak uzun vadeli çevikliği mümkün kılar.</p>
+        </section>
+    </main>
+
+    <footer class="mt-12 pt-8 border-t border-gray-300 text-center text-sm text-neutral-500">
+        <p>Etkileşimli DDD Analizi. İçerik "Bir E-ticaret Platformu İçin Alan Odaklı Analiz" raporundan türetilmiştir.</p>
+    </footer>
+</div>
+
+<script>
+    // Rapordan çıkarılan veriler
+    const boundedContextsData = [
+        {
+            name: "Ürün Kataloğu",
+            coreResponsibility: "Ürün detaylarını, kategorilerini, fiyatlandırmasını ve sunumunu yönetme.",
+            keyAggregates: ["Ürün", "Kategori"],
+            ubiquitousLanguageExamples: ["SKU", "Ürün Varyantı", "Liste Fiyatı", "Özellik"],
+            primaryInteractions: ["Envanter (stok seviyeleri)", "Alışveriş Sepeti (ürün bilgisi)", "Öneriler (ürün özellikleri)"],
+            detailed: {
+                purpose: "Ürün Kataloğu bağlamı, herhangi bir e-ticaret platformunun merkezindedir ve satışa sunulan ürünlerle ilgili tüm bilgilerin yönetilmesinden sorumludur. Bu, ürünlerin oluşturulmasını, ayrıntılı açıklamalarını, özelliklerini, kategorizasyonunu, fiyatlandırma bilgilerini (karmaşık fiyatlandırma ayrı bir bağlam olabilir) ve resimler ve videolar gibi ilişkili medyayı içerir. Müşterilere hangi ürünlerin mevcut olduğu ve nasıl sunulduğu konusunda birincil doğruluk kaynağı olarak hizmet eder.",
+                aggregates: "`Ürün` (Küme Kökü): Satılabilir bir öğe için temel küme. *İçindeki Varlıklar*: `Varyant` (boyut, renk), `Yorum` (isteğe bağlı). *Değer Nesneleri*: `SKU`, `ÜrünAdı`, `Açıklama`, `Fiyat`, `Boyutlar`, `ResimURL`, `Özellik`. \n`Kategori` (Küme Kökü): Ürün sınıflandırmasını yönetir. *Değer Nesneleri*: `KategoriAdı`, `KategoriAçıklaması`, `ÜstKategoriID`.",
+                language: "\"SKU\", \"Ürün Başlığı\", \"Liste Fiyatı\", \"Satış Fiyatı\", \"Ürün Varyantı\", \"Kategori Ağacı\", \"Özellik Filtresi\", \"Ürün Zenginleştirme\", \"Çapraz Satış\", \"Yukarı Satış\" gibi terimler yaygındır.",
+                integrations: "`Alışveriş Sepeti`ne, `Sipariş Yönetimi`ne ayrıntılar sağlar. `Öneriler`e veri besler. `Fiyatlandırma Bağlamı`ndan (ayrıysa) fiyatlandırma alır, `DAM`den medya alır, `Envanter Yönetimi`nden envanter durumu alır.",
+                challenges: "Karmaşık ürün yapılarını (paketler, yapılandırılabilir) yönetme. Büyük veri hacimlerini işleme. Karmaşık fiyatlandırma mantığı ayrı bir bağlam gerektirebilir. PIM sistemi entegrasyonu.",
+                explanation: "Buradaki \"Ürün\" varlığı, `Envanter Yönetimi`nin `StokKalemi` miktarı ve lojistiğine odaklanmasından farklı olarak, satılabilir ve sunulabilir yönlere (pazarlama metni, resimler) odaklanır. Bu, şişirilmiş, kafa karıştırıcı monolitik bir modelden kaçınmak için Sınırlı Bağlamlara olan ihtiyacı vurgular."
+            }
+        },
+        {
+            name: "Envanter Yönetimi",
+            coreResponsibility: "Stok seviyelerini, depo konumlarını ve rezervasyonları izleme.",
+            keyAggregates: ["StokKalemi", "Depo"],
+            ubiquitousLanguageExamples: ["MevcutMiktar", "ATP (Söz Verilebilir Miktar)", "BekleyenSipariş"],
+            primaryInteractions: ["Ürün Kataloğu (yeni SKU'lar)", "Sipariş Yönetimi (rezervasyonlar, eksiltmeler)", "Sevkiyat (toplanan kalemler)"],
+            detailed: {
+                purpose: "Fiziksel stok miktarını ve yerini doğru bir şekilde izlemekten sorumludur. Temel görevler arasında stok seviyelerini yönetmek, müşteri siparişleri için stok rezervasyonlarını işlemek, stok hareketlerini işlemek ve stok seviyeleri eşiklerin altına düştüğünde ikmal faaliyetlerini tetiklemek yer alır.",
+                aggregates: "`StokKalemi` (Küme Kökü): SKU ile tanımlanır, envanter durumunu temsil eder. *Değer Nesneleri*: `MevcutMiktar`, `RezerveMiktar`, `KullanılabilirMiktar` (ATP), `Konum`, `YenidenSiparişSeviyesi`. \n`Depo` (Küme Kökü): Birden fazla depo için. *İçindeki Varlıklar*: `StokHareketKaydı`.",
+                language: "\"SKU\", \"Stok Seviyesi\", \"Söz Verilebilir Miktar (ATP)\", \"Rezerve Miktar\", \"Taahhüt Edilen Stok\", \"Bekleyen Sipariş\", \"Stok Düzeltmesi\", \"Devir Sayımı\", \"Mal Girişi\", \"Depo Transferi\", \"Güvenlik Stoğu.\"",
+                integrations: "`Sipariş Yönetimi` (stok ayırır/eksiltir). `Ürün Kataloğu` (yeni SKU'lar). `Alışveriş Sepeti` (stok durumu). `Sevkiyat ve Teslimat` (toplanan stok). Harici WMS.",
+                challenges: "Yüksek satış hızlarında gerçek zamanlı stok doğruluğu. Dağıtık envanteri yönetme. Karmaşık 'Kullanılabilir' miktar tanımı. Fiziksel depo operasyonlarıyla tutarlılık.",
+                explanation: "`StokKalemi`ne yapılan güncellemeler, mikroservisi içinde işlemsel olarak tutarlıdır. Platform genelinde senkronize envanter görünümü genellikle nihai tutarlılığa dayanır. Envanter bağlamı, stok seviyeleri hakkındaki 'gerçeğe' sahiptir ve güncellemeleri alan olayları aracılığıyla yayar (örneğin, `StokSeviyesiDeğiştiOlayı`)."
+            }
+        },
+        {
+            name: "Alışveriş Sepeti & İstek Listesi",
+            coreResponsibility: "Kullanıcının satın almadan önce veya gelecekte değerlendirmek üzere geçici öğe seçimlerini yönetme.",
+            keyAggregates: ["AlışverişSepeti", "İstekListesi"],
+            ubiquitousLanguageExamples: ["Sepete Ekle", "Sepet Ara Toplamı", "Daha Sonra Kaydet"],
+            primaryInteractions: ["Ürün Kataloğu (ürün detayları)", "Müşteri Yönetimi (kullanıcı ilişkilendirme)", "Sipariş Yönetimi (ödeme)"],
+            detailed: {
+                purpose: "Kullanıcıların satın almak üzere öğeleri seçmesi (`AlışverişSepeti`) veya daha sonra kaydetmesi (`İstekListesi`) için işlevsellik sağlar. Seçilen öğeleri, miktarları ve genellikle fiyatların/promosyonların anlık görüntüsünü yönetir.",
+                aggregates: "`AlışverişSepeti` (Küme Kökü): `KullanıcıID` veya `OturumID` ile tanımlanır. *İçindeki Varlıklar*: `SepetKalemi` (`Ürün`e referans verir, `Miktar`, `AnlıkFiyat` depolar). *Değer Nesneleri*: `UygulananPromosyonKodu`, `SepetAraToplamı`. \n`İstekListesi` (Küme Kökü): `KullanıcıID` ile tanımlanır. *İçindeki Varlıklar*: `İstekListesiKalemi` (`Ürün`e referans verir, `EklenmeTarihi`, kullanıcı `Notu`).",
+                language: "\"Sepete Ekle\", \"Sepetten Çıkar\", \"Miktarı Güncelle\", \"Sepeti Görüntüle\", \"Sepet Ara Toplamı\", \"Ödemeye Devam Et\", \"Daha Sonra Kaydet\", \"İstek Listesine Ekle\", \"Sepete Taşı.\"",
+                integrations: "`Ürün Kataloğu` (ürün detaylarını alır). `Envanter Yönetimi` (isteğe bağlı stok kontrolleri). `Sipariş Yönetimi` (sipariş oluşturmak için sepet içeriğini iletir). `Müşteri Yönetimi` (hesaplarla ilişkilendirir). `Promosyonlar Bağlamı` (kodları doğrular).",
+                challenges: "Anonim/misafir sepetlerini yönetme ve birleştirme. Sepet kalıcılık politikaları. Detaylar değişirse fiyat/promosyon tutarlılığı. Eşzamanlı sepet değişiklikleri. Karmaşık sepete özgü iş kuralları (miktar limitleri, promosyon uygunluğu).",
+                explanation: "`AlışverişSepeti`, satın alma niyeti için geçici bir kapsayıcıdır ve resmi bir `Sipariş`e dönüşür. Geçici doğası tasarımı etkiler (daha az sıkı denetim/depolama). `AlışverişSepetiniÖde` komutu ve `AlışverişSepetiÖdendi` olayı bu geçişi işaretler. Tutarlılık ihtiyaçları, bir `Sipariş`in uzun vadeli, yasal olarak bağlayıcı tutarlılığından farklıdır."
+            }
+        },
+        {
+            name: "Sipariş Yönetimi",
+            coreResponsibility: "Siparişlerin verilmesinden yerine getirme başlatılmasına ve iadelere kadar işlenmesi.",
+            keyAggregates: ["Sipariş"],
+            ubiquitousLanguageExamples: ["Sipariş Ver", "Sipariş Durumu", "İade Yetkisi"],
+            primaryInteractions: ["Alışveriş Sepeti (girdi)", "Envanter (stok)", "Ödeme (durum)", "Sevkiyat (yerine getirme talebi)", "Müşteri Yönetimi (müşteri verileri)"],
+            detailed: {
+                purpose: "İşlem akışının kalbi, bir müşterinin siparişinin tüm yaşam döngüsünü yönetir: verme, ödeme onayı, yerine getirme başlatma, izleme ve iadeler gibi teslimat sonrası süreçler.",
+                aggregates: "`Sipariş` (Küme Kökü): Bir müşterinin onaylanmış satın alma işlemini temsil eder. *İçindeki Varlıklar*: `SiparişKalemi` (ürün, miktar, ödenen fiyat), `SevkiyatDetayı` (basit sevkiyat bilgisi veya referans). *Değer Nesneleri*: `SiparişNumarası`, `SiparişDurumu` (örneğin, ÖDEME_BEKLİYOR, GÖNDERİLDİ), `MüşteriBilgisi` (anlık görüntü), `ÖdemeID`, `Uygulananİndirim`, `SiparişTarihi`, `ToplamTutar`.",
+                language: "\"Sipariş Ver\", \"Sipariş Onayı\", \"Sipariş Geçmişi\", \"Siparişi Takip Et\", \"Siparişi İptal Et\", \"İade Talebi\", \"Geri Ödeme İşlendi\", \"Sipariş Durumu\" (belirli durumlar), \"Bekleyen Sipariş\", \"Fatura.\"",
+                integrations: "`Alışveriş Sepeti` (sepet verilerini alır). `Envanter Yönetimi` (stok ayırır/eksiltir). `Müşteri Yönetimi` (profillerle bağlantı kurar, detayları alır). `Ödeme İşleme` (ödemeyi başlatır, durum güncellemelerini alır). `Sevkiyat ve Teslimat` (yerine getirme talepleri gönderir, durum güncellemelerini alır). `Bildirimler Bağlamı` (siparişle ilgili iletişimleri tetikler).",
+                challenges: "Karmaşık sipariş durum geçişlerini yönetme (genellikle bir durum makinesi). Kısmi gönderiler, bekleyen siparişler gibi istisnaları işleme. Birden fazla sistemle koordinasyon. Uzun süren iş süreçlerini yönetme (Saga'lar sıklıkla kullanılır). Kritik finansal/yerine getirme verilerinin tutarlılığını sağlama.",
+                explanation: "Bir `Sipariş`, taahhüt edilmiş bir işlemin önemli bir geçmiş kaydıdır. Bir `Sipariş` içindeki veriler (ödenen fiyat gibi), ürün detayları daha sonra `ÜrünKataloğu`nda değişse bile hizmet, raporlama ve yasal amaçlar için geçmiş doğruluğunu sağlamak amacıyla belirli bir durumdan sonra (örneğin, ödeme onaylandıktan sonra) genellikle değişmezdir."
+            }
+        },
+        {
+            name: "Müşteri Yönetimi",
+            coreResponsibility: "Müşteri profillerini, adreslerini, tercihlerini ve sadakat durumunu yönetme.",
+            keyAggregates: ["Müşteri"],
+            ubiquitousLanguageExamples: ["Müşteri Profili", "Teslimat Adresi", "Sadakat Seviyesi"],
+            primaryInteractions: ["KYY (kimlik doğrulama bağlantısı)", "Sipariş Yönetimi (sipariş geçmişi bağlantısı)", "Öneriler (profil verileri)"],
+            detailed: {
+                purpose: "Tüm müşteri bilgilerini yönetmeye adanmıştır: kişisel detaylar, adresler, iletişim tercihleri, etkileşim geçmişi, sadakat durumu ve müşteri segmentasyonu.",
+                aggregates: "`Müşteri` (Küme Kökü): Bir bireyi/işletmeyi temsil eder. *İçindeki Varlıklar*: `Adres` (karmaşıksa, aksi takdirde VO). *Değer Nesneleri*: `MüşteriAdı`, `EpostaAdresi`, `TelefonNumarası`, `Adres` (VO: Sokak, Şehir, vb.), `İletişimTercihleri`, `SadakatDurumu`, `DoğumTarihi`.",
+                language: "\"Müşteri Profili\", \"Kayıtlı Kullanıcı\", \"Misafir Kullanıcı\", \"Teslimat Adresi\", \"Fatura Adresi\", \"Sadakat Seviyesi\", \"İletişim Tercihleri\", \"Hesap Detayları\", \"Satın Alma Geçmişi (özet/bağlantılar).\"",
+                integrations: "`KYY` (profilleri kimliği doğrulanmış kullanıcı hesaplarıyla bağlar). `Sipariş Yönetimi` (siparişler için müşteri detayları sağlar, satın alma geçmişi oluşturur). `Alışveriş Sepeti` (varsayılan adresleri alır). `Öneriler ve Kişiselleştirme` (algoritmalar için müşteri verileri sağlar). `Destek/Biletleme Bağlamı` (profilleri destek etkileşimleriyle bağlar).",
+                challenges: "Veri Gizliliği ve Uyumluluk (GDPR, CCPA). Müşteri başına birden fazla adresi yönetme. Misafir/kayıtlı kullanıcıları ayırt etme. Yinelenen müşteri hesaplarını işleme. `Müşteri` kümesini odaklanmış tutma (diğer kümelere ID ile referans verme, tüm verileri gömmeme).",
+                explanation: "`Müşteri` (iş ilişkisi: geçmiş, tercihler), KYY'deki `KullanıcıHesabı`ndan (güvenlik sorumlusu: kimlik bilgileri, roller) farklıdır. Bu ayrım, özel evrime olanak tanır. Zengin bir `Müşteri` profili olmadan bir `KullanıcıHesabı` mevcut olabilir veya tam tersi."
+            }
+        },
+        {
+            name: "Ödeme İşleme",
+            coreResponsibility: "Ödeme işlemlerini, ağ geçidi entegrasyonlarını ve sahtekarlık kontrollerini güvenli bir şekilde yönetme.",
+            keyAggregates: ["Ödemeİşlemi", "ÖdemeYöntemi"],
+            ubiquitousLanguageExamples: ["Ödemeyi Yetkilendir", "Fonları Yakala", "PCI Uyumluluğu"],
+            primaryInteractions: ["Sipariş Yönetimi (ödeme başlatma/durumu)", "Harici Ödeme Ağ Geçitleri"],
+            detailed: {
+                purpose: "İşlemlerin finansal yönlerini güvenli bir şekilde yönetmeye odaklanmıştır: yetkilendirmeleri başlatma, fonları yakalama, geri ödemeleri işleme, ödeme sağlayıcılarıyla entegrasyon ve sahtekarlık tespiti.",
+                aggregates: "`Ödemeİşlemi` (Küme Kökü): Bir ödeme işlemini temsil eder. *Değer Nesneleri*: `İşlemID`, `Tutar`, `ÖdemeDurumu` (örneğin, YETKİLENDİRİLDİ, YAKALANDI), `ÖdemeYöntemiDetayları` (tokenleştirilmiş, hassas olmayan), `ZamanDamgası`, `AğGeçidiYanıtKodu`. \n`ÖdemeYöntemi` (Küme Kökü): Kayıtlı, yeniden kullanılabilir bir ödeme aracını temsil eder. *Değer Nesneleri*: `TokenleştirilmişKartTanımlayıcısı`, `KartTürü`, `SonKullanmaTarihi` (maskeli), `FaturaAdresiID`.",
+                language: "\"Ödemeyi Yetkilendir\", \"Fonları Yakala\", \"Yetkilendirmeyi İptal Et\", \"Geri Ödemeyi İşle\", \"Ödeme Ağ Geçidi\", \"İşlem ID\", \"Ters İbraz\", \"Mutabakat\", \"PCI DSS Uyumluluğu\", \"Tokenleştirme\", \"Sahtekarlık Puanı.\"",
+                integrations: "`Sipariş Yönetimi` (ödeme/yakalama/geri ödemeleri başlatır, durum alır). `Müşteri Yönetimi` (kayıtlı ödeme yöntemlerini profillerle ilişkilendirir). Harici Ödeme Ağ Geçitleri (Stripe, PayPal). Sahtekarlık Tespit Servisleri.",
+                challenges: "Güvenlik ve Uyumluluk (PCI DSS çok önemlidir). Çeşitli ödeme yöntemlerini işleme. İdempotansiyi sağlama. İşlemleri mutabık kılma. Karmaşık ağ geçidi entegrasyonu (ACL genellikle gereklidir).",
+                explanation: "Sıkı güvenlik (PCI DSS) genellikle bu bağlam için güçlü izolasyon gerektirir (adanmış ağ, HSM'ler). Bu operasyonel ihtiyaç, ayrı bir bağlam olmasını sağlar. Ödeme mantığını başka bir yere (örneğin, `Sipariş Yönetimi`) gömmek, PCI kapsamını genişleterek karmaşıklığı ve riski artırır."
+            }
+        },
+        {
+            name: "Sevkiyat & Teslimat",
+            coreResponsibility: "Lojistiği, taşıyıcı entegrasyonunu, paket takibini ve teslimatı yönetme.",
+            keyAggregates: ["Sevkiyat", "TeslimatSiparişi"],
+            ubiquitousLanguageExamples: ["Sevkiyat Oluştur", "Takip Numarası", "Taşıyıcı"],
+            primaryInteractions: ["Sipariş Yönetimi (teslimat talebi/durumu)", "Envanter (ürün toplama)", "Harici Taşıyıcı API'leri"],
+            detailed: {
+                purpose: "Ürünleri müşteriye ulaştırma lojistik sürecinden sorumludur: taşıyıcıları seçme, maliyetleri hesaplama, etiketleri oluşturma, malları gönderme, paketleri izleme ve teslimat sorunlarını yönetme.",
+                aggregates: "`Sevkiyat` (Küme Kökü): Birlikte gönderilen öğeler topluluğu. *İçindeki Varlıklar*: `Paket` (çok paketli sevkiyatsa). *Değer Nesneleri*: `TakipNumarası`, `TaşıyıcıAdı`, `SevkiyatHizmetSeviyesi`, `TeslimatAdresi` (anlık görüntü), `TahminiTeslimTarihi`, `GerçekTeslimTarihi`, `SevkiyatMaliyeti`, `EtiketURL`, `GümrükBilgileri`. \n`TeslimatSiparişi` (Küme Kökü): Depo toplama/paketleme için isteğe bağlı iç sipariş.",
+                language: "\"Sevkiyat Oluştur\", \"Etiket Yazdır\", \"Malları Gönder\", \"Paketi Takip Et\", \"Teslimat Kanıtı (POD)\", \"Teslimat Onayı\", \"Taşıyıcı Entegrasyonu\", \"Sevkiyat Bölgesi\", \"Beyan Edilen Değer\", \"Konşimento\", \"İade Mal Yetkisi (RMA).\"",
+                integrations: "`Sipariş Yönetimi` (teslimat taleplerini alır, sevkiyat güncellemelerini gönderir). `Envanter Yönetimi` (toplanan öğeleri onaylar). Harici Taşıyıcı API'leri (fiyatlar, etiketler, takip). `Bildirimler Bağlamı` (güncellemeleri gönderir). WMS (ayrıysa).",
+                challenges: "Birden fazla taşıyıcı API'siyle entegrasyon (ACL önerilir). Doğru sevkiyat maliyeti hesaplaması. Uluslararası sevkiyat karmaşıklıkları. Gerçek zamanlı paket takibi. İade lojistiği (ters lojistik).",
+                explanation: "`Sipariş Yönetimi`nden farklıdır. Bir `Sipariş`, müşteri niyeti/finansal işlemdir. Bir `Sevkiyat`, fiziksel harekettir. `Sipariş Yönetimi`, `TeslimatSiparişiKomutu` verebilir; `Sevkiyat ve Teslimat` daha sonra sevkiyat karmaşıklıklarını ele alarak `Sipariş Yönetimi`ni ticari yönlere odaklar."
+            }
+        },
+        {
+            name: "Kimlik & Erişim Yönetimi (KYY)",
+            coreResponsibility: "Kullanıcı kimlik doğrulaması, yetkilendirme, roller ve izinler.",
+            keyAggregates: ["KullanıcıHesabı", "Rol", "İzin"],
+            ubiquitousLanguageExamples: ["Kimliği Doğrula", "Yetkilendir", "Erişim Jetonu", "Rol Tabanlı Erişim"],
+            primaryInteractions: ["Kullanıcı kimliği veya erişim kontrolü gerektiren tüm bağlamlar", "Müşteri Yönetimi (hesapları bağlama)"],
+            detailed: {
+                purpose: "Kullanıcı/sistem kimliğini doğrular (kimlik doğrulama) ve izin verilen eylemleri belirler (yetkilendirme). Kimlik bilgilerini, oturumları, rolleri, izinleri yönetir ve harici kimlik sağlayıcılarıyla entegre olur.",
+                aggregates: "`KullanıcıHesabı` (veya `Kimlik`) (Küme Kökü): Sistem kullanıcısı/servis hesabı. *Değer Nesneleri*: `KullanıcıAdı`, `KarmaŞifre`, `ŞifreTuzu`, `EpostaAdresi`, `HesapDurumu`, `SonGirişZamanDamgası`. \n`Rol` (Küme Kökü): İzinlerin adlandırılmış koleksiyonu. *İçindeki Varlıklar/VO'lar*: `İzinAtaması`. \n`İzin` (Varlık veya VO): Belirli bir hak (örneğin, \"SiparişiGörüntüle\").",
+                language: "\"Kimliği Doğrula\", \"Yetkilendir\", \"Giriş Yap\", \"Çıkış Yap\", \"Kullanıcı Kimlik Bilgileri\", \"Şifre Politikası\", \"Rol\", \"İzin\", \"Erişim Jetonu\", \"Yenileme Jetonu\", \"Tek Oturum Açma (SSO)\", \"Çok Faktörlü Kimlik Doğrulama (MFA)\", \"Erişim Kontrol Listesi (ACL).\"",
+                integrations: "Kimlik doğrulama/yetkilendirme gerektiren hemen hemen tüm diğer Sınırlı Bağlamlar. `Müşteri Yönetimi` (KullanıcıHesaplarını Müşteri profilleriyle bağlar). SSO için Harici Kimlik Sağlayıcıları (IdP'ler örn. Azure AD, Okta).",
+                challenges: "Güvenlik çok önemlidir. Kimlik doğrulama mekanizmalarını seçme (OAuth2, SAML). Esnek rol/izin modelleri tasarlama (RBAC yaygındır). Şifre/oturum yönetimini güvenli bir şekilde yönetme. MFA uygulama. Genellikle genel bir alt alan; üçüncü taraf çözümler (Keycloak, Auth0) yaygındır.",
+                explanation: "KYY genellikle 'genel bir alt alandır'. Mantığı e-ticarete özgü değildir. Hazır çözümlerden yararlanmak, özel uygulamadan daha iyidir ve ekiplerin temel e-ticaret alanlarına odaklanmasını sağlar. Gerçek ayrıntılı yetkilendirme uygulaması genellikle kaynak sahibi bağlamın uygulama servis katmanında, KYY'den gelen kimlik/izin bilgileri kullanılarak gerçekleşir."
+            }
+        },
+        {
+            name: "Öneriler & Kişiselleştirme",
+            coreResponsibility: "Kullanıcı deneyimini uyarlama, ürün önerileri ve kişiselleştirilmiş içerik.",
+            keyAggregates: ["KullanıcıÖneriProfili", "ÖneriKuralSeti"],
+            ubiquitousLanguageExamples: ["Önerilen Ürünler", "Kullanıcı Segmenti", "İşbirlikçi Filtreleme"],
+            primaryInteractions: ["Ürün Kataloğu (ürün verileri)", "Müşteri Yönetimi (profil)", "Sipariş Yönetimi (geçmiş)", "Davranışsal veri akışlarını tüketir"],
+            detailed: {
+                purpose: "Kullanıcı davranışını, profillerini, ürün özelliklerini ve diğer verileri analiz ederek kişiselleştirilmiş içerik, ürün önerileri ve hedeflenmiş promosyonlarla kullanıcı deneyimini geliştirir.",
+                aggregates: "`KullanıcıÖneriProfili` (Küme Kökü): `KullanıcıID` ile tanımlanır, kişiselleştirme için kullanıcıya özgü verileri depolar. *Değer Nesneleri*: `GörüntülenenÜrün`, `SatınAlınanÜrünKategorisi`, `KullanıcıSegmentEtiketi`, `TercihPuanı`. \n`ÖneriKuralSeti` (veya `KişiselleştirmeStratejisi`) (Küme Kökü): Öneriler veya kişiselleştirilmiş içerik oluşturmak için kullanılan mantığı/kuralları/ML modellerini tanımlar. *İçindeki Varlıklar*: `ÖneriKuralı`. *Değer Nesneleri*: `KuralKoşulu`, `KuralEylemi`, `AlgoritmaParametreleri`. \n`KişiselleştirilmişİçerikÖğesi` (Küme Kökü): İsteğe bağlı, kendi yaşam döngüsü, kuralları ve takibi olan belirli kişiselleştirilmiş içerik parçaları için.",
+                language: "\"Önerilen Ürünler\", \"Kişiselleştirilmiş Teklif\", \"Kullanıcı Segmenti\", \"Davranışsal Hedefleme\", \"İşbirlikçi Filtreleme\", \"İçerik Tabanlı Filtreleme\", \"Sıkça Birlikte Alınanlar\", \"Müşteri Yolculuğu Kişiselleştirme\", \"A/B Test Grubu.\"",
+                integrations: "`Ürün Kataloğu` (ürün detayları). `Müşteri Yönetimi` (kullanıcı profil verileri). `Sipariş Yönetimi` (satın alma geçmişi). Davranışsal veri akışlarını (görüntülemeler, tıklamalar) tüketir. Kullanıcı arayüzü bileşenlerine öneri API'leri sunar.",
+                challenges: "Veri yoğun operasyonlar. ML model entegrasyonu (karmaşık yaşam döngüsü). Gerçek zamanlı ve toplu işleme. Yeni kullanıcılar/ürünler için 'soğuk başlangıç' sorunu. Etkinliği ölçme (A/B testi). Kişiselleştirmeyi gizlilikle dengeleme. Dinamik Kullanıcı Segmentlerini yönetme.",
+                explanation: "Bu bağlam, temel işlem bağlamlarından farklı operasyonel özelliklere (veri ağırlıklı, ML bağımlılığı, farklı ölçeklendirme) sahiptir ve bu da onu ayrım için güçlü bir aday yapar. Bu, temel işlem akışlarını etkilemeden özel teknolojiye ve bağımsız evrime olanak tanır. Başka bir yere gömmek, bu bağlamları ML/analitik karmaşıklıklarına bağlardı."
+            }
+        }
+    ];
+
+    const integrationPatternsData = [
+        { name: "Koruma Katmanı (ACL)", description: "Kullanım Durumu: İstenmeyen bir modele sahip harici bir sistemle (eski, üçüncü taraf) entegre olurken. ACL, bağlamınızın modelini izole ederek çeviri yapar. E-ticaret Örneği: `Ödemeİşleme Bağlamı`nın hantal bir API'ye sahip harici bir Ödeme Ağ Geçidi için bir ACL kullanması." },
+        { name: "Paylaşılan Çekirdek", description: "Kullanım Durumu: İki veya daha fazla bağlam, alan modellerinin küçük, ortak bir alt kümesini (kod dahil) paylaşır. Küçük, kararlı olmalı ve koordinasyon gerektirmelidir. E-ticaret Örneği: `ÜrünKataloğu` ve `SiparişYönetimi` arasında paylaşılan çok temel bir `Para` Değer Nesnesi (dikkatli kullanın; bağımsızlığı korumak için genellikle her birinin kendi sürümüne sahip olması daha iyidir)." },
+        { name: "Müşteri-Tedarikçi", description: "Kullanım Durumu: Bir bağlam (Tedarikçi), diğerinin (Müşteri) tükettiği hizmetler/veriler sağlar. Tedarikçi ekip arayüzü belirler. E-ticaret Örneği: `ÜrünKataloğu Bağlamı` (Tedarikçi), `Alışveriş Sepeti Bağlamı`na (Müşteri) ürün bilgisi sağlar." },
+        { name: "Uyum Sağlayan (Conformist)", description: "Kullanım Durumu: Tüketen bağlam (Müşteri), ideal olmasa bile bir tedarik bağlamının (Tedarikçi) modeline pasif olarak uyar. Genellikle büyük, değiştirilemeyen harici sistemlerle kullanılır. E-ticaret Örneği: Raporlama ekibinin etkisi yoksa `SiparişYönetimi` modeline uyan bir `Raporlama Bağlamı`." },
+        { name: "Açık Ana Bilgisayar Hizmeti / Yayınlanmış Dil", description: "Kullanım Durumu: Bir bağlam, yeteneklerini iyi tanımlanmış, kararlı, genel bir arayüz (Açık Ana Bilgisayar Hizmeti) aracılığıyla, genellikle şemalarla biçimlendirilmiş açık bir veri formatı/kelime dağarcığı (Yayınlanmış Dil) kullanarak sunar. E-ticaret Örneği: `Sevkiyat ve Teslimat Bağlamı`nın sevkiyat oluşturmak veya durumu izlemek için diğer bağlamlara bir API sunması." }
+    ];
+
+    const guidanceData = [
+        {
+            title: "5.1. Küçük Başlamak: Yinelemeli Alan Modelleme",
+            points: [
+                "İşe, en önemli değeri veya rekabet avantajını sağlayan bir veya iki temel Sınırlı Bağlama odaklanarak başlayın (örneğin, `Sipariş Yönetimi` veya `Ürün Kataloğu`).",
+                "İlk alan modellerini ve bağlam sınırlarını hipotez olarak kabul edin. DDD keşifsel bir süreçtir; modeller, alan uzmanlarından gelen geri bildirimlere, geliştirme sırasında elde edilen içgörülere ve gelişen iş gereksinimlerine göre sürekli olarak geliştirilmelidir.",
+                "Bu yinelemeli geliştirme, alanın eksik anlaşılması nedeniyle yanlış sınırların belirlendiği \"Erken Ayrıştırmanın Tehlikeleri\"nden kaçınmaya yardımcı olur."
+            ]
+        },
+        {
+            title: "5.2. İşbirliği Anahtardır",
+            points: [
+                "DDD, mimarların veya kıdemli geliştiricilerin tek başına yaptığı bir faaliyet değildir. Başarısı, teknik ekip ile alan uzmanları (iş paydaşları, ürün sahipleri, son kullanıcılar) arasındaki derin ve sürekli işbirliğine bağlıdır.",
+                "Bu işbirliği, Her Yerde Geçerli Dilin geliştirilmesi ve iyileştirilmesi, iş alanını doğru bir şekilde yansıtması ve herkes tarafından anlaşılması için gereklidir.",
+                "Alan modellerini doğrulamak ve iş gerçekleriyle uyumlu olmalarını sağlamak için düzenli atölye çalışmaları, tartışmalar ve geri bildirim oturumları gereklidir."
+            ]
+        },
+        {
+            title: "5.3. Sadece Verilere Değil, Davranışa Odaklanın",
+            points: [
+                "\"Anemik alan modellerinden\" (yalnızca alıcı ve ayarlayıcı yöntemleri olan, herhangi bir iş mantığından yoksun sınıflar) kaçının.",
+                "DDD, Kümelerin ve Varlıkların yalnızca veriyi (durum) değil, aynı zamanda bu veri üzerinde çalışan ve iş kurallarını ve değişmezleri zorlayan davranışı (yöntemler) da kapsadığı zengin alan modellerini savunur.",
+                "Örneğin, bir `Sipariş` Kümesi, işlemi doğrulamak ve siparişin durumunu tutarlı bir şekilde güncellemek için mantığı içeren `ÜrünEkle(ürün, miktar)` veya `İndirimUygula(kuponKodu)` gibi yöntemlere sahip olmalıdır."
+            ]
+        },
+        {
+            title: "5.4. Dayanıklı ve Geliştirilebilir E-ticaret Sistemleri Tasarlamak İçin Temel Çıkarımlar",
+            points: [
+                "Bağımsız Dağıtılabilirliği Benimseyin: Bu, birincil bir mimari itici güç olmalıdır. Hizmetleri ve etkileşimlerini, bireysel hizmetlerdeki değişikliklere ve dağıtımlara diğerlerini etkilemeden izin verecek şekilde tasarlayın.",
+                "Açık Sınırlara ve Sözleşmelere Öncelik Verin: İyi tanımlanmış Sınırlı Bağlamlar ve mikroservisler arasındaki kararlı, açık arayüzler, karmaşıklığı yönetmek ve paralel geliştirmeyi sağlamak için kritik öneme sahiptir.",
+                "Değişim İçin İnşa Edin: E-ticaret alanının ve destekleyici teknoloji ortamının sürekli geliştiğini kabul edin. Mimari uyarlanabilir olmalıdır."
+            ]
+        }
+    ];
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const accordionToggles = document.querySelectorAll('.accordion-toggle');
+        const contextsTableBody = document.getElementById('contextsTableBody');
+        const contextSelector = document.getElementById('contextSelector');
+        const contextDetailView = document.getElementById('contextDetailView');
+        const interactionsChartCtx = document.getElementById('interactionsChart').getContext('2d');
+        const interactiveContextMapContainer = document.getElementById('interactiveContextMap');
+        const integrationPatternsContainer = document.getElementById('integrationPatterns');
+        const guidanceItemsContainer = document.getElementById('guidanceItemsContainer');
+
+        function switchTab(tabId) {
+            tabContents.forEach(content => content.classList.remove('active'));
+            navLinks.forEach(link => link.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.nav-link[data-tab="${tabId}"]`).classList.add('active');
+            if (tabId === 'explorer' && !chartInstance) {
+                renderInteractionsChart();
+            }
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+                document.querySelector('main').scrollTop = 0;
+            });
+        });
+
+        accordionToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                const arrow = this.querySelector('.arrow-icon');
+                const isOpening = !(content.style.maxHeight && content.style.maxHeight !== "0px");
+
+                if (isOpening) {
+                    const parentGroup = this.closest('.space-y-4');
+                    if (parentGroup) {
+                        parentGroup.querySelectorAll('.accordion-toggle').forEach(otherToggle => {
+                            if (otherToggle !== this) {
+                                otherToggle.nextElementSibling.style.maxHeight = "0px";
+                                otherToggle.querySelector('.arrow-icon').style.transform = 'rotate(0deg)';
+                            }
+                        });
+                    }
+                }
+
+                if (isOpening) {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    arrow.style.transform = 'rotate(180deg)';
+                } else {
+                    content.style.maxHeight = "0px";
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+
+        function populateContextsTable() {
+            contextsTableBody.innerHTML = '';
+            boundedContextsData.forEach(context => {
+                const row = contextsTableBody.insertRow();
+                row.className = 'hover:bg-amber-100 cursor-pointer transition-colors duration-150';
+                row.insertCell().textContent = context.name;
+                row.insertCell().textContent = context.coreResponsibility;
+                row.insertCell().textContent = context.keyAggregates.join(', ');
+                row.insertCell().textContent = context.primaryInteractions.join(', ');
+                row.addEventListener('click', () => {
+                    contextSelector.value = context.name;
+                    displayContextDetails(context.name);
+                    document.getElementById('contextDetailView').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        }
+
+        function populateContextSelector() {
+            contextSelector.innerHTML = '<option value="">-- Bir Bağlam Seçin --</option>';
+            boundedContextsData.forEach(context => {
+                const option = document.createElement('option');
+                option.value = context.name;
+                option.textContent = context.name;
+                contextSelector.appendChild(option);
+            });
+            contextSelector.addEventListener('change', (event) => {
+                if (event.target.value) {
+                    displayContextDetails(event.target.value);
+                } else {
+                    contextDetailView.innerHTML = `<p class="text-neutral-500">Ayrıntılarını görmek için bir bağlam seçin.</p>`;
+                }
+            });
+        }
+
+        function formatTextToHtml(text) {
+            if (!text) return '';
+            let html = text.replace(/`([^`]+)`/g, '<code class="keyword-tag bg-teal-100 text-teal-700 px-1 rounded">$1</code>');
+            html = html.replace(/^\s*\*\s+(.*)/gm, '<li class="ml-4">$1</li>');
+            if (html.includes('<li')) {
+                html = '<ul class="list-disc list-inside">' + html + '</ul>';
+                html = html.replace(/<\/li>\n<li/g, '</li><li');
+            }
+            html = html.replace(/\n(?!<li|<\/ul>)/g, '<br>');
+            html = html.replace(/<\/ul><br>/g, '</ul>');
+            return html;
+        }
+
+
+        function displayContextDetails(contextName) {
+            const context = boundedContextsData.find(c => c.name === contextName);
+            if (!context || !context.detailed) {
+                contextDetailView.innerHTML = `<p class="text-neutral-500">${contextName} için ayrıntılar bulunamadı.</p>`;
+                return;
+            }
+
+            contextDetailView.innerHTML = `
+                    <h3 class="text-2xl font-semibold text-teal-700 mb-4">${context.name}</h3>
+                    <div class="detail-card">
+                        <h4 class="text-lg font-semibold mb-1">Amaç ve Temel Sorumluluklar:</h4>
+                        <p class="text-neutral-600">${formatTextToHtml(context.detailed.purpose)}</p>
+                    </div>
+                    <div class="detail-card">
+                        <h4 class="text-lg font-semibold mb-1">Anahtar Kümeler ve Varlıklar/Değer Nesneleri:</h4>
+                        <p class="text-neutral-600">${formatTextToHtml(context.detailed.aggregates)}</p>
+                    </div>
+                    <div class="detail-card">
+                        <h4 class="text-lg font-semibold mb-1">Her Yerde Geçerli Dil Örnekleri:</h4>
+                        <p class="text-neutral-600">${formatTextToHtml(context.detailed.language)}</p>
+                    </div>
+                    <div class="detail-card">
+                        <h4 class="text-lg font-semibold mb-1">Entegrasyon Noktaları:</h4>
+                        <p class="text-neutral-600">${formatTextToHtml(context.detailed.integrations)}</p>
+                    </div>
+                    <div class="detail-card">
+                        <h4 class="text-lg font-semibold mb-1">Zorluklar ve İncelikler:</h4>
+                        <p class="text-neutral-600">${formatTextToHtml(context.detailed.challenges)}</p>
+                    </div>
+                    <div class="detail-card">
+                        <h4 class="text-lg font-semibold mb-1">Daha Fazla Açıklama:</h4>
+                        <p class="text-neutral-600">${formatTextToHtml(context.detailed.explanation)}</p>
+                    </div>
+                `;
+        }
+
+        let chartInstance = null;
+        function renderInteractionsChart() {
+            if (chartInstance) chartInstance.destroy();
+
+            const labels = boundedContextsData.map(c => c.name);
+            const data = boundedContextsData.map(c => c.primaryInteractions.length);
+
+            chartInstance = new Chart(interactionsChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Birincil Etkileşim Sayısı',
+                        data: data,
+                        backgroundColor: 'rgba(20, 184, 166, 0.7)',
+                        borderColor: 'rgba(13, 148, 136, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                color: '#404040'
+                            },
+                            grid: {
+                                color: '#E5E5E5'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    const originalLabel = labels[index];
+                                    return originalLabel.length > 15 ? originalLabel.substring(0, 14) + '...' : originalLabel;
+                                },
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                color: '#404040'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#404040'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return labels[tooltipItems[0].dataIndex];
+                                }
+                            },
+                            titleColor: '#FFFFFF',
+                            bodyColor: '#E0F2F1',
+                            backgroundColor: '#0D9488'
+                        }
+                    }
+                }
+            });
+        }
+
+        function populateInteractiveContextMap() {
+            interactiveContextMapContainer.innerHTML = '';
+            const contextNames = boundedContextsData.map(c => c.name);
+
+            contextNames.forEach(name => {
+                const box = document.createElement('div');
+                box.className = 'context-box bg-white hover:bg-teal-50';
+                box.textContent = name;
+                box.dataset.contextName = name;
+                interactiveContextMapContainer.appendChild(box);
+
+                box.addEventListener('mouseenter', () => {
+                    const currentContextName = box.dataset.contextName;
+                    const currentContextData = boundedContextsData.find(c => c.name === currentContextName);
+
+                    document.querySelectorAll('#interactiveContextMap .context-box').forEach(b => {
+                        b.classList.remove('highlight-strong', 'highlight-medium');
+                        const otherContextName = b.dataset.contextName;
+
+                        if (otherContextName === currentContextName) {
+                            b.classList.add('highlight-strong');
+                        } else if (currentContextData && currentContextData.primaryInteractions.some(interaction => {
+                            const interactionContextName = interaction.split('(')[0].trim();
+                            return otherContextName.toLowerCase().includes(interactionContextName.toLowerCase()) || interactionContextName.toLowerCase().includes(otherContextName.toLowerCase());
+                        })) {
+                            b.classList.add('highlight-medium');
+                        }
+                    });
+                });
+                box.addEventListener('mouseleave', () => {
+                    document.querySelectorAll('#interactiveContextMap .context-box').forEach(b => b.classList.remove('highlight-strong', 'highlight-medium'));
+                });
+            });
+        }
+
+        function populateIntegrationPatterns() {
+            integrationPatternsContainer.innerHTML = '';
+            integrationPatternsData.forEach(pattern => {
+                const div = document.createElement('div');
+                div.className = 'p-4 bg-amber-100 rounded-lg shadow-sm';
+                div.innerHTML = `
+                        <h4 class="text-lg font-semibold text-teal-700 mb-1">${pattern.name}</h4>
+                        <p class="text-neutral-600">${pattern.description}</p>
+                    `;
+                integrationPatternsContainer.appendChild(div);
+            });
+        }
+
+        function populateGuidanceItems() {
+            guidanceItemsContainer.innerHTML = '';
+            guidanceData.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'p-6 bg-teal-50 rounded-lg shadow';
+                const pointsHTML = item.points.map(p => `<li class="text-neutral-600">${p}</li>`).join('');
+                itemDiv.innerHTML = `
+                        <h3 class="text-xl font-semibold text-teal-700 mb-2">${item.title}</h3>
+                        <ul class="list-disc list-inside space-y-1">${pointsHTML}</ul>
+                    `;
+                guidanceItemsContainer.appendChild(itemDiv);
+            });
+        }
+
+        populateContextsTable();
+        populateContextSelector();
+        if (boundedContextsData.length > 0 && contextSelector.options.length > 1) {
+            contextSelector.selectedIndex = 1;
+            displayContextDetails(contextSelector.value);
+        } else if (contextSelector.options.length <=1 ) {
+            contextDetailView.innerHTML = `<p class="text-neutral-500">Görüntülenecek bağlam yok.</p>`;
+        }
+
+        populateInteractiveContextMap();
+        populateIntegrationPatterns();
+        populateGuidanceItems();
+        if (document.getElementById('explorer').classList.contains('active')) {
+            renderInteractionsChart();
+        }
+    });
+
+</script>
+</body>
+</html>

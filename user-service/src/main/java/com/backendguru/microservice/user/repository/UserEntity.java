@@ -1,5 +1,6 @@
-package com.backendguru.microservice.user;
+package com.backendguru.microservice.user.repository;
 
+import com.backendguru.microservice.user.domain.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,5 +25,12 @@ public class UserEntity {
     private String passwordHash;
     private String firstName;
     private String lastName;
+
+    public static UserEntity  fromDomain(User user){
+        return UserEntity.builder()
+                .email(user.getEmail().getValue())
+                .passwordHash(user.getPassword().getHashedValue())
+                .build();
+    }
 
 }

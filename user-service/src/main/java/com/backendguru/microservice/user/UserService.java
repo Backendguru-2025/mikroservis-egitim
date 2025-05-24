@@ -2,7 +2,13 @@ package com.backendguru.microservice.user;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import com.backendguru.microservice.user.domain.*;
+import com.backendguru.microservice.user.model.NewUserRequest;
+import com.backendguru.microservice.user.model.UserResponse;
+import com.backendguru.microservice.user.repository.UserEntity;
+import com.backendguru.microservice.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -10,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 @Service // Bunu bir Spring servis bileşeni olarak işaretler
 @RequiredArgsConstructor // Lombok: final alanlar için bir constructor oluşturur (DI)
 public class UserService {
-
 
     private final UserRepository userRepository;
 
@@ -34,4 +39,14 @@ public class UserService {
         return userRepository.findById(id).map(this::toResponse); // JpaRepository'nin findById metodunu kullanır
     }
 
+    public Long registerUser(NewUserRequest newUserRequest) {
+        Email email = new Email(newUserRequest.email());
+        Password password = new Password(newUserRequest.password());
+        User user = new User(null, email, password, null, null, null);
+        user.addRole(new Role(null, "NORMAL_USER", Set.of(Privilege.LOGIN, Privilege.CREATE_ORDER)));
+
+        UserEntity newUserEntity = userRepository.save(UserEntity.fromDomain(user));
+
+        return newUserEntity.getId();
+    }
 }

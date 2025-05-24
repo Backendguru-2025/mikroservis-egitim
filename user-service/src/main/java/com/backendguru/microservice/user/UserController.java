@@ -1,14 +1,14 @@
 package com.backendguru.microservice.user;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.backendguru.microservice.user.model.NewUserRequest;
+import com.backendguru.microservice.user.model.UserResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,4 +31,9 @@ public class UserController{
         return userService.getAllUsers();
     }
 
+    @PostMapping
+    public ResponseEntity<?> registerUser(@RequestBody NewUserRequest newUserRequest){
+        Long userId = userService.registerUser(newUserRequest);
+        return ResponseEntity.ok(Collections.singletonMap("userId", userId));
+    }
 }

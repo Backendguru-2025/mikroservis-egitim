@@ -58,17 +58,17 @@ public class OrderService {
         return toResponse(orderRepository.save(orderEntity)); // JpaRepository'nin save metodunu kullanır
     }
 
-    public void checkProduct(NewOrderRequest newOrderRequest) {
+    private void checkProduct(NewOrderRequest newOrderRequest) {
         ProductResponse foundProduct = productClientFacade.getProduct(newOrderRequest.productId());
         if (foundProduct.productId() != newOrderRequest.productId()) {
-            throw new RuntimeException("Product not found");
+            throw new RuntimeException("Product not found productId: " + newOrderRequest.productId());
         }
     }
 
     private void checkUser(NewOrderRequest newOrderRequest) {
         UserResponse foundUser = userClientFacade.getUser(newOrderRequest.userId());
         if (foundUser.username().equals("0") || foundUser.username().equals("-1")) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("User not found userId: " + newOrderRequest.userId());
         }
     }
 

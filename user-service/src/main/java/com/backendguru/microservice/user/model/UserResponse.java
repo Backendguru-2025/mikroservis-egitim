@@ -1,4 +1,4 @@
-package com.backendguru.microservice.user;
+package com.backendguru.microservice.user.model;
 
 public record UserResponse(
     String username,

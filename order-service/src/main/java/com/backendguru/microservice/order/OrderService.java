@@ -6,6 +6,8 @@ import java.util.Optional;
 import com.backendguru.microservice.order.client.product.ProductClientFacade;
 import com.backendguru.microservice.order.client.product.ProductResponse;
 import com.backendguru.microservice.order.client.user.UserClientFacade;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -24,6 +26,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductClientFacade productClientFacade;
     private final UserClientFacade userClientFacade;
+    private final MeterRegistry meterRegistry;
 
     public List<OrderResponse> getAllOrders() {
         var orderEntities = orderRepository.findAll();
@@ -55,7 +58,11 @@ public class OrderService {
         orderEntity.setProductId(newOrderRequest.productId());
         orderEntity.setUserId(newOrderRequest.userId());
         orderEntity.setQuantity(newOrderRequest.quantity());
-        return toResponse(orderRepository.save(orderEntity)); // JpaRepository'nin save metodunu kullanır
+        OrderEntity order = orderRepository.save(orderEntity);
+
+        Counter counter = meterRegistry.counter("orders.placed", "userId", order.getUserId().toString());
+        counter.increment();
+        return toResponse(order); // JpaRepository'nin save metodunu kullanır
     }
 
     private void checkProduct(NewOrderRequest newOrderRequest) {

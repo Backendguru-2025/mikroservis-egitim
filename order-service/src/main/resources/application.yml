@@ -16,7 +16,8 @@ spring:
 eureka:
   client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
 management:
-  endpoints.web.exposure.include: health,info,circuitbreakers
+  endpoints.web.exposure.include: health,info,circuitbreakers,metrics,prometheus
+  #endpoints.web.exposure.include: '*'
   tracing.sampling.probability: 1.0
   zipkin.tracing.endpoint: http://zipkin-server:9411/api/v2/spans
 

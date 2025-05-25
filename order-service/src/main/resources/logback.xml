@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false">
+    <springProperty scope="context"
+                    name="serviceName"
+                    source="spring.application.name"/>
+
+    <appender name="LOGSTASH"
+              class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${LOGSTASH_HOST:-logstash}:${LOGSTASH_PORT:-5000}</destination>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <loggerName/>
+                <threadName/>
+                <logLevel/>
+                <pattern>
+                    <pattern>{
+                        "service.name" : "${serviceName:-unknown}",
+                        "trace.id": "%X{traceId:-}",
+                        "span.id": "%X{spanId:-}",
+                        "correlation.id": "%X{correlationId:-}",
+                        "message": "%msg"
+                        }</pattern>
+                </pattern>
+                <mdc/>          <!-- any extra MDC entries -->
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="LOGSTASH"/>
+    </root>
+</configuration>

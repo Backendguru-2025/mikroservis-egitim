@@ -13,14 +13,13 @@ WORKDIR /app
 # konteynerin /app dizinine kopyalar ve adını app.jar olarak değiştirir.
 # Kaynak yolunu derleme aracınıza (Maven/Gradle) göre ayarlayın.
 COPY target/*.jar app.jar
-# VEYA Gradle için: COPY build/libs/product-service-*.jar app.jar
 
 # --- add curl for health-checks ---
 RUN apk add --no-cache curl
 
 # 4. Uygulama Portunu Dışa Açın (Expose)
 # Konteyner içindeki uygulamanın 8080 portunu dinlediğini belgeler.
-EXPOSE 8080
+EXPOSE 8888
 
 # 5. Başlangıç Komutunu Tanımlayın
 # Konteyner başladığında yürütülecek komutu belirtir.

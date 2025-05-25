@@ -14,6 +14,8 @@ WORKDIR /app
 # Kaynak yolunu derleme aracınıza (Maven/Gradle) göre ayarlayın.
 COPY target/*.jar app.jar
 
+# --- add curl for health-checks ---
+RUN apk add --no-cache curl
 
 # 4. Uygulama Portunu Dışa Açın (Expose)
 # Konteyner içindeki uygulamanın 8080 portunu dinlediğini belgeler.

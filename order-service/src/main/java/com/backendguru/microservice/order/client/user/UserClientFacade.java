@@ -11,8 +11,8 @@ public class UserClientFacade {
     
     private final UserClientService userClientService;
 
-    public UserClientFacade() {
-        RestClient restClient = RestClient.builder().baseUrl("http://user-service:8080/").build();
+    public UserClientFacade(RestClient.Builder restClientBuilder) {
+        RestClient restClient = restClientBuilder.baseUrl("http://user-service:8080/").build();
         RestClientAdapter adapter = RestClientAdapter.create(restClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
 

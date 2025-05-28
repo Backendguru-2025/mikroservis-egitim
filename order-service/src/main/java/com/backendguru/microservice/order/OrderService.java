@@ -1,11 +1,14 @@
 package com.backendguru.microservice.order;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import com.backendguru.microservice.order.client.product.ProductClientFacade;
 import com.backendguru.microservice.order.client.product.ProductResponse;
 import com.backendguru.microservice.order.client.user.UserClientFacade;
+import com.backendguru.microservice.order.event.OrderCreatedEvent;
+import com.backendguru.microservice.order.event.OrderEventProducer;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.http.HttpStatusCode;
@@ -27,6 +30,7 @@ public class OrderService {
     private final ProductClientFacade productClientFacade;
     private final UserClientFacade userClientFacade;
     private final MeterRegistry meterRegistry;
+    private final OrderEventProducer orderEventProducer;
 
     public List<OrderResponse> getAllOrders() {
         var orderEntities = orderRepository.findAll();
@@ -47,22 +51,29 @@ public class OrderService {
     }
 
     public OrderResponse createOrder(NewOrderRequest newOrderRequest) {
-        // Kaydetmeden önce burada doğrulama veya iş mantığı eklenebilir
-        // kullanici var mi ?
-        // urun var mi ?
         checkProduct(newOrderRequest);
         checkUser(newOrderRequest);
 
+        OrderEntity order = createOrderEntity(newOrderRequest);
 
+        orderEventProducer.sendOrderCreatedEvent(
+                new OrderCreatedEvent(order.getId(),
+                        order.getUserId(),
+                        LocalDateTime.now(),
+                        order.getProductId()
+                        ));
+        Counter counter = meterRegistry.counter("orders.placed", "userId", order.getUserId().toString());
+        counter.increment();
+        return toResponse(order); // JpaRepository'nin save metodunu kullanır
+    }
+
+    private OrderEntity createOrderEntity(NewOrderRequest newOrderRequest) {
         var orderEntity = new OrderEntity();
         orderEntity.setProductId(newOrderRequest.productId());
         orderEntity.setUserId(newOrderRequest.userId());
         orderEntity.setQuantity(newOrderRequest.quantity());
         OrderEntity order = orderRepository.save(orderEntity);
-
-        Counter counter = meterRegistry.counter("orders.placed", "userId", order.getUserId().toString());
-        counter.increment();
-        return toResponse(order); // JpaRepository'nin save metodunu kullanır
+        return order;
     }
 
     private void checkProduct(NewOrderRequest newOrderRequest) {

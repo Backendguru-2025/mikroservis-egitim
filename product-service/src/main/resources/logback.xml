@@ -4,10 +4,32 @@
                     name="serviceName"
                     source="spring.application.name"/>
 
-    <appender name="LOGSTASH"
-              class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>${LOGSTASH_HOST:-logstash}:${LOGSTASH_PORT:-5000}</destination>
-        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+    <!--    <appender name="LOGSTASH"-->
+    <!--              class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
+    <!--        <destination>${LOGSTASH_HOST:-logstash}:${LOGSTASH_PORT:-5000}</destination>-->
+    <!--        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">-->
+    <!--            <providers>-->
+    <!--                <timestamp/>-->
+    <!--                <loggerName/>-->
+    <!--                <threadName/>-->
+    <!--                <logLevel/>-->
+    <!--                <pattern>-->
+    <!--                    <pattern>{-->
+    <!--                        "service.name" : "${serviceName:-unknown}",-->
+    <!--                        "trace.id": "%X{traceId:-}",-->
+    <!--                        "span.id": "%X{spanId:-}",-->
+    <!--                        "correlation.id": "%X{correlationId:-}",-->
+    <!--                        "message": "%msg"-->
+    <!--                        }</pattern>-->
+    <!--                </pattern>-->
+    <!--                <mdc/>          &lt;!&ndash; any extra MDC entries &ndash;&gt;-->
+    <!--                <stackTrace/>-->
+    <!--            </providers>-->
+    <!--        </encoder>-->
+    <!--    </appender>-->
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" >
             <providers>
                 <timestamp/>
                 <loggerName/>
@@ -29,6 +51,7 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="LOGSTASH"/>
+        <!--        <appender-ref ref="LOGSTASH"/>-->
+        <appender-ref ref="CONSOLE" />
     </root>
 </configuration>

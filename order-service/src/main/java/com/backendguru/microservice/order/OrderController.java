@@ -36,7 +36,7 @@ public class OrderController{
         return orderService.getAllOrders();
     }
 
-    @RolesAllowed("orders.write")
+    //@RolesAllowed("orders.write")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED) // HTTP durumunu 201 olarak ayarlar
     public OrderResponse createProduct(@RequestBody NewOrderRequest order) {

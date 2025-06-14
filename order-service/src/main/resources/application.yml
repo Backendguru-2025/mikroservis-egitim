@@ -18,6 +18,11 @@ spring:
       bootstrap-servers: kafka:29092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/microservices
 
 
 eureka:
@@ -31,6 +36,7 @@ management:
 logging:
   structured.format.console: ecs
   pattern.correlation: "[%X{traceId:-},%X{spanId:-}]"
+
 
 
 

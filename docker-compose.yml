@@ -1,5 +1,30 @@
 services:
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_DATABASE_VENDOR: dev-file
+      KEYCLOAK_EXTRA_ARGS: --health-enabled=true
+#      KEYCLOAK_HOSTNAME: keycloak
+#      KEYCLOAK_PROXY_ADDRESS_FORWARDING: true
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+
+#    healthcheck: # Added healthcheck
+#      test: [ "CMD", "curl", "-fsS", "http://localhost:9000/health/ready" ]
+#      interval: 20s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.9.1 # Güncel stabil bir sürüm kullanılıyor
     container_name: zookeeper
@@ -14,7 +39,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   kafka:
     image: confluentinc/cp-kafka:7.9.1 # Güncel stabil bir sürüm kullanılıyor
@@ -40,24 +65,24 @@ services:
         limits:
           memory: 1024M
 
-  akhq:
-    image: tchiotludo/akhq:latest
-    container_name: akhq
-    ports:
-      - "8988:8080" # AKHQ UI, ana makine portu 8088'de erişilebilir olacak
-    environment:
-      AKHQ_CONFIGURATION: |
-        akhq:
-          connections:
-            docker-kafka-cluster:
-              properties:
-                bootstrap.servers: "kafka:29092" # AKHQ için Kafka dahili Docker ağ adresi
-    depends_on:
-      - kafka
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+#  akhq:
+#    image: tchiotludo/akhq:latest
+#    container_name: akhq
+#    ports:
+#      - "8988:8080" # AKHQ UI, ana makine portu 8088'de erişilebilir olacak
+#    environment:
+#      AKHQ_CONFIGURATION: |
+#        akhq:
+#          connections:
+#            docker-kafka-cluster:
+#              properties:
+#                bootstrap.servers: "kafka:29092" # AKHQ için Kafka dahili Docker ağ adresi
+#    depends_on:
+#      - kafka
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 256M
 
 #  elasticsearch:
 #    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
@@ -134,7 +159,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   config-server:
     build: ./config-server # Path to Dockerfile context
@@ -158,7 +183,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   api-gateway:
     build: ./api-gateway
@@ -174,11 +199,12 @@ services:
       - user-service
       - product-service
       - order-service
+      - keycloak
     deploy:
       resources:
         limits:
-          memory: 512M
-      
+          memory: 256M
+
   eureka-server:
     build: ./eureka-server
     ports:
@@ -192,7 +218,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
 #  eureka-client:
 #    build: ./client
@@ -218,10 +244,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
-  user-service: 
-    build: ./user-service            
+  user-service:
+    build: ./user-service
     ports:
       - "8089:8080"
     depends_on:
@@ -230,7 +256,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   order-service:
     build: ./order-service
@@ -250,32 +276,34 @@ services:
 #        condition: service_healthy
       zipkin-server:
         condition: service_healthy
+#      keycloak:
+#        condition: service_healthy
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
-  notification-service:
-    build: ./notification-service
-    ports:
-      - "8091:8080"
-    environment:
-      # MySQL için Spring Boot veri kaynağı (datasource) yapılandırması
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/notificationservicedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=cokgizlisifre
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update # veya üretimde 'validate'; 'create-drop' genellikle H2 içindir
-      - SPRING_JPA_DATABASE-PLATFORM=org.hibernate.dialect.MySQLDialect # MySQL dialect'ini belirtir
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-      mysql-db:
-        condition: service_healthy
-
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+#  notification-service:
+#    build: ./notification-service
+#    ports:
+#      - "8091:8080"
+#    environment:
+#      # MySQL için Spring Boot veri kaynağı (datasource) yapılandırması
+#      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/notificationservicedb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+#      - SPRING_DATASOURCE_USERNAME=root
+#      - SPRING_DATASOURCE_PASSWORD=cokgizlisifre
+#      - SPRING_JPA_HIBERNATE_DDL_AUTO=update # veya üretimde 'validate'; 'create-drop' genellikle H2 içindir
+#      - SPRING_JPA_DATABASE-PLATFORM=org.hibernate.dialect.MySQLDialect # MySQL dialect'ini belirtir
+#    depends_on:
+#      eureka-server:
+#        condition: service_healthy
+#      mysql-db:
+#        condition: service_healthy
+#
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 256M
 
   mysql-db: # 'mysql-db' adında bir MySQL servisi tanımlar
     image: mysql:8.0 # Resmi bir MySQL imajını kullanır
@@ -287,11 +315,11 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql # MySQL verilerini kalıcı hale getirir
       - ./init:/docker-entrypoint-initdb.d
-    
+
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pcokgizlisifre"]
       timeout: 20s
-      retries: 10      
+      retries: 10
 
 volumes:
   mysql_data: # Veri kalıcılığı için adlandırılmış bir volume tanımlar

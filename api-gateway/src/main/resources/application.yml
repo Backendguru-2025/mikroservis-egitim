@@ -4,14 +4,27 @@ spring:
   cloud:
     gateway:
       routes:
-      - id: rewritepath_route
+      - id: products
         uri: http://product-service:8080
         predicates:
         - Path=/mobile/products/**
 #        - Path=/web/products/**
+      - id: orders
+        uri: http://order-service:8080
+        predicates:
+        - Path=/mobile/order/**
+#        - Path=/web/products/**
         filters:
-        - RewritePath=/mobile/?(?<segment>.*), /v1/$\{segment}   
-        
+        - RewritePath=/mobile/?(?<segment>.*), /v1/$\{segment}
+      default-filters:
+        - TokenRelay= # Bu, erişim belirtecini(access token) aktaracaktır
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/microservices-realm
+          # jwk-set-uri: İsteğe bağlı, genellikle issuer-uri'den keşfedilir
+
 eureka:
   client:
     serviceUrl:

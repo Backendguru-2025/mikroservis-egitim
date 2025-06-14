@@ -3,6 +3,7 @@ package com.backendguru.microservice.order;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,7 @@ public class OrderController{
         return orderService.getAllOrders();
     }
 
+    @RolesAllowed("orders.write")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED) // HTTP durumunu 201 olarak ayarlar
     public OrderResponse createProduct(@RequestBody NewOrderRequest order) {

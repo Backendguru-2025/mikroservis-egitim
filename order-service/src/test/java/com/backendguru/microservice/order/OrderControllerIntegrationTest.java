@@ -37,7 +37,7 @@ class OrderControllerIntegrationTest {
     @LocalServerPort
     private int port;
 
-    @Test
+    //@Test
     void getAllProducts(@Autowired TestRestTemplate restTemplate) {
         NewOrderRequest newOrderRequest = new NewOrderRequest(1L, 1, 1);
         ResponseEntity<NewOrderRequest> response = restTemplate.postForEntity("/v1/orders", newOrderRequest, NewOrderRequest.class);

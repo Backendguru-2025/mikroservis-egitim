@@ -22,7 +22,7 @@ public class SecurityConfig {
                 //.oauth2Login(Customizer.withDefaults()) // Keycloak aracılığıyla login akışını başlatmak için
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())); // Bearer belirteçlerini (JWT'ler) doğrulamak için
-        //http.csrf(csrf -> csrf.disable()); // Durumsuz API'ler için yaygın, CSRF ihtiyaçlarını dikkatlice değerlendirin
+        http.csrf(csrf -> csrf.disable()); // Durumsuz API'ler için yaygın, CSRF ihtiyaçlarını dikkatlice değerlendirin
         return http.build();
     }
 }

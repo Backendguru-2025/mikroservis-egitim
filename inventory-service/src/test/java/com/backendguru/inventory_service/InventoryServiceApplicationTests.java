@@ -1,20 +1,12 @@
-package com.backendguru.microservice.order;
+package com.backendguru.inventory_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SpringBootTest(properties = {
-		"spring.cloud.discovery.enabled=false",
-		"spring.cloud.service-registry.auto-registration.enabled=false",
-		"spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-		"spring.datasource.driverClassName=org.h2.Driver",
-		"spring.datasource.username=sa",
-		"spring.datasource.password=",
-		"spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
-})
-class OrderServiceApplicationTests {
+@SpringBootTest
+class InventoryServiceApplicationTests {
 
 	static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("apache/kafka:3.9.1"));
 

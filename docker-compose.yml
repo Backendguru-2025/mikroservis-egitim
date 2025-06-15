@@ -1,22 +1,22 @@
 services:
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:25.0
-    container_name: keycloak
-    command: start-dev
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KEYCLOAK_DATABASE_VENDOR: dev-file
-      KEYCLOAK_EXTRA_ARGS: --health-enabled=true
-#      KEYCLOAK_HOSTNAME: keycloak
-#      KEYCLOAK_PROXY_ADDRESS_FORWARDING: true
-    ports:
-      - "8080:8080"
-      - "9000:9000"
-    depends_on:
-      mysql-db:
-        condition: service_healthy
+#  keycloak:
+#    image: quay.io/keycloak/keycloak:25.0
+#    container_name: keycloak
+#    command: start-dev
+#    environment:
+#      KEYCLOAK_ADMIN: admin
+#      KEYCLOAK_ADMIN_PASSWORD: admin
+#      KEYCLOAK_DATABASE_VENDOR: dev-file
+#      KEYCLOAK_EXTRA_ARGS: --health-enabled=true
+##      KEYCLOAK_HOSTNAME: keycloak
+##      KEYCLOAK_PROXY_ADDRESS_FORWARDING: true
+#    ports:
+#      - "8080:8080"
+#      - "9000:9000"
+#    depends_on:
+#      mysql-db:
+#        condition: service_healthy
 
 #    healthcheck: # Added healthcheck
 #      test: [ "CMD", "curl", "-fsS", "http://localhost:9000/health/ready" ]
@@ -199,7 +199,7 @@ services:
       - user-service
       - product-service
       - order-service
-      - keycloak
+#      - keycloak
     deploy:
       resources:
         limits:
@@ -304,6 +304,34 @@ services:
 #      resources:
 #        limits:
 #          memory: 256M
+
+  inventory-service:
+    build: ./inventory-service
+    ports:
+      - "8100:8080"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "8110:8080"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   mysql-db: # 'mysql-db' adında bir MySQL servisi tanımlar
     image: mysql:8.0 # Resmi bir MySQL imajını kullanır
